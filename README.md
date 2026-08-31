@@ -82,3 +82,9 @@ curl 127.0.0.1:8080/stats | jq
   "ts": 1788031878.883144
 }
 ```
+
+## Afterthoughts
+
+- Missing jitter on backoff to prevent retry storm
+- Telemetry subscription check doesn't check interval
+- Telemetry other than heartbeat is being resubscribed on link down/up, but not when vehicle stops sending telemetry (for some other reasons)
