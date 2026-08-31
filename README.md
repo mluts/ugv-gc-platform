@@ -86,7 +86,7 @@ curl 127.0.0.1:8080/stats | jq
 ## Overview / Decisions
 
 - uav_gc/link.py - Owns connection. Establishes and maintains link, manages callbacks
-- uav_gc/vehicle.py - Owns transport telemetry.
+- uav_gc/vehicle.py - Owns telemetry.
 - uav_gc/command.py - Encodes command, helps getting ack
 - uav_gc/api.py - HTTP Api.
 - Didn't differentiate command failure modes because there were no use-cases for this
