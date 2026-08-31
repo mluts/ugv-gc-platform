@@ -96,4 +96,4 @@ curl 127.0.0.1:8080/stats | jq
 
 - Missing jitter on backoff to prevent retry storm
 - Telemetry subscription check doesn't check interval
-- Telemetry other than heartbeat is being resubscribed on link down/up, but not when vehicle stops sending telemetry (for some other reasons)
+- Telemetry other than heartbeat is being resubscribed on link down/up, but not when vehicle stops sending telemetry (for some other reasons not reported by ACK, e.g. reboot)
