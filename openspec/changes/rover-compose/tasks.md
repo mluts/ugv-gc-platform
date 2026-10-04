@@ -19,12 +19,18 @@
     verify `docker compose --profile sim up sitl` keeps running for 60 seconds with MAVProxy alive in the logs.
 
     If MAVProxy exits, apply the `--no-mavproxy` fallback from `design.md` and record it there
-- [ ] 1.3 Point the Makefile at Compose: `sitl` runs the simulator service in the foreground, `kill` kills it, `build` builds the images, and `uav-sitl` / `rm-uav-sitl` are removed; verify `make sitl` starts the rover and `make kill` from another terminal stops it
-- [ ] 1.4 Verify `make up` starts the simulator with the video services and `make down` removes all of them, using `docker compose --profile sim ps`
+- [x] 1.3 Point the Makefile at Compose: `sitl` runs the simulator service in the foreground,
+  `kill` kills it,
+  `build` builds the images,
+   and `uav-sitl` / `rm-uav-sitl` are removed;
+
+   verify `make sitl` starts the rover and `make kill` from another terminal stops it
+- [x] 1.4 Verify `make up` starts the simulator with the video services and `make down` removes all of them, using `docker compose --profile sim ps`
 
 ## 2. Check script on Rover
 
-- [ ] 2.1 Change `scripts/check_sitl.py` to switch to `HOLD`, then `MANUAL`, arm, and disarm before exiting; verify `make check-tcp` exits 0 against a running simulator
+- [x] 2.1 Change `scripts/check_sitl.py` to switch to `HOLD`,
+  then `MANUAL`, arm, and disarm before exiting; verify `make check-tcp` exits 0 against a running simulator
 - [ ] 2.2 Verify `make check` (UDP through MAVProxy) exits 0 against a running simulator, or remove `check` and `run-udp` if the `--no-mavproxy` fallback was applied in 1.2
 
 ## 3. Bridge ready for either environment
