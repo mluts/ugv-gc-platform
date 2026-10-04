@@ -41,3 +41,15 @@ services:
         read_only: true
         bind:
           create_host_path: false
+
+  sitl:
+    build: ./sitl
+    profiles: [sim]
+    tty: true
+    stdin_open: true
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "127.0.0.1:5762:5762"
+    environment:
+      SITL_SPEEDUP: ${SITL_SPEEDUP:-1}

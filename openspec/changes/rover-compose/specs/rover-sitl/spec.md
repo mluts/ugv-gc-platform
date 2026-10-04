@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Provides the simulated ground vehicle every other capability is built and tested against: an ArduPilot Rover simulator and the vehicle bridge, started together with one command and resilient to the simulator starting late, stopping or restarting.
+Provides the simulated ground vehicle every other capability is built and tested against: an ArduPilot Rover simulator started from the Compose stack, and a vehicle bridge that runs on the host and stays connected through the simulator starting late, stopping or restarting.
 
 ## ADDED Requirements
 
@@ -10,7 +10,7 @@ Provides the simulated ground vehicle every other capability is built and tested
 The simulator SHALL run an ArduPilot Rover with steering and throttle control, and the bridge SHALL report and command it as a ground vehicle.
 
 #### Scenario: State reports a ground mode
-- **WHEN** the stack is running and the bridge's state endpoint is requested
+- **WHEN** the simulator and the bridge are running and the bridge's state endpoint is requested
 - **THEN** the reported mode is a Rover mode (for example `MANUAL` or `HOLD`), never a Copter-only mode such as `STABILIZE`
 
 #### Scenario: Ground mode change is accepted
@@ -25,20 +25,28 @@ The simulator SHALL run an ArduPilot Rover with steering and throttle control, a
 - **WHEN** the vehicle is armable in `MANUAL` and arm is requested, then disarm is requested
 - **THEN** each request succeeds and the state endpoint reports `armed` as true, then false
 
-### Requirement: One command starts the vehicle stack
-`make up` SHALL start the simulator and the bridge together with the existing video services, with no other manual step beyond creating `.env`.
+### Requirement: One command starts the simulators
+`make up` SHALL start the Rover simulator together with the existing video services, with no other manual step beyond creating `.env`, and SHALL expose the simulator's MAVLink endpoint on the host's loopback interface only.
 
-#### Scenario: Stack comes up connected
-- **WHEN** `make up` is run with the images already built
+#### Scenario: Host-run bridge connects
+- **WHEN** `make up` has been run with the images already built and `make run-tcp` is started on the host
 - **THEN** within 60 seconds the bridge's state endpoint reports the vehicle link as `UP`
 
 #### Scenario: Vehicle becomes armable
-- **WHEN** the stack has been up for 120 seconds at simulation speed 1
+- **WHEN** the simulator has been up for 120 seconds at simulation speed 1 with the bridge connected
 - **THEN** the state endpoint reports `armable` as true
 
-#### Scenario: One command stops the stack
+#### Scenario: Simulator alone in the foreground
+- **WHEN** `make sitl` is run
+- **THEN** only the simulator starts, with its output attached to the terminal
+
+#### Scenario: One command stops the simulators
 - **WHEN** `make down` is run
-- **THEN** the simulator, the bridge and the video services are all stopped and removed
+- **THEN** the simulator and the video services are all stopped and removed
+
+#### Scenario: Check script passes against the rover
+- **WHEN** the simulator is running, no bridge is connected, and `make check-tcp` is run
+- **THEN** the script passes heartbeat, prearm, armable, mode change and arm, and exits with status 0
 
 ### Requirement: Bridge tolerates an absent simulator
 The bridge SHALL keep serving its state endpoint whenever the simulator is unreachable, and SHALL connect or reconnect on its own without being restarted.
@@ -55,24 +63,13 @@ The bridge SHALL keep serving its state endpoint whenever the simulator is unrea
 - **WHEN** the simulator is started again after being killed
 - **THEN** within 60 seconds the state endpoint reports the link as `UP` and telemetry ages are fresh again, with no action taken on the bridge
 
-### Requirement: Bridge API is reachable from the host only
-The bridge's HTTP API SHALL be reachable on the host's loopback interface and SHALL NOT be reachable from other machines, because it has no authentication.
+### Requirement: Bridge listen address is configurable
+The bridge SHALL listen on the loopback interface, port 8080, unless configured otherwise, and SHALL accept a different listen host and port through its environment, so the same code can run on the host or in a container.
 
-#### Scenario: Reachable on loopback
-- **WHEN** the stack is running and `http://127.0.0.1:8080/stats` is requested on the host
-- **THEN** the bridge answers with the vehicle state
+#### Scenario: Default is loopback only
+- **WHEN** the bridge is started with no listen configuration
+- **THEN** `http://127.0.0.1:8080/stats` answers and port 8080 on the host's LAN address refuses connections
 
-#### Scenario: Not reachable from the network
-- **WHEN** the stack is running and port 8080 is requested on the host's LAN address
-- **THEN** the connection is refused
-
-### Requirement: Simulator can run alone for a host-run bridge
-The simulator SHALL be startable without the Compose bridge, exposing its MAVLink endpoint on the host's loopback, so the bridge and the check script can run directly on the host.
-
-#### Scenario: Host-run bridge connects
-- **WHEN** `make sitl` is running and `make run-tcp` is started on the host
-- **THEN** the host-run bridge reports the link as `UP`
-
-#### Scenario: Check script passes against the rover
-- **WHEN** `make sitl` is running and `make check-tcp` is run
-- **THEN** the script passes heartbeat, prearm, armable, mode change and arm, and exits with status 0
+#### Scenario: Listen address overridden
+- **WHEN** the bridge is started with a listen port of 8081 configured
+- **THEN** the state endpoint answers on port 8081 and not on 8080
