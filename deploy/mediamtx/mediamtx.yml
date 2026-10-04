@@ -1,0 +1,54 @@
+# MediaMTX gateway configuration for the `sim` profile.
+# Keys follow the pinned image tag in compose.yaml (bluenviron/mediamtx:1.21.1);
+# they change between versions, so re-check against the matching mediamtx.yml
+# when the tag is bumped.
+
+logLevel: info
+
+# NOTE: The default config grants api/metrics only from 127.0.0.1. Through
+# Docker's port mapping the gateway sees the bridge gateway address, not
+# localhost, so those endpoints need an explicit open user. The stream is
+# unauthenticated in this change by design; nginx auth_request arrives later.
+authInternalUsers:
+  - user: any
+    permissions:
+      - action: publish
+      - action: read
+      - action: playback
+      - action: api
+      - action: metrics
+
+# Control API: used to inspect configured paths.
+api: true
+apiAddress: :9997
+
+# Prometheus-format metrics.
+metrics: true
+metricsAddress: :9998
+
+# RTSP ingest. TCP only: readers on the host reach the gateway through a
+# mapped port, so the server's UDP RTP ports are not routable from outside
+# the container.
+rtsp: true
+rtspTransports: [tcp]
+rtspAddress: :8554
+
+# HLS is off; WebRTC is the delivery path in this change.
+hls: false
+
+# WebRTC for browsers. ICE listens on a fixed port on both UDP and TCP so the
+# TCP path can act as a fallback when Docker's UDP forwarding misbehaves.
+# NOTE: webrtcAdditionalHosts is supplied as MTX_WEBRTCADDITIONALHOSTS in
+# compose.yaml; MediaMTX does not interpolate environment variables in this file.
+webrtc: true
+webrtcAddress: :8889
+webrtcLocalUDPAddress: :8189
+webrtcLocalTCPAddress: :8189
+
+# Static camera paths. `street` is the simulator now and the first real camera
+# later, so the name is what the camera sees, not how the stream is produced.
+paths:
+  street:
+    # see https://raw.githubusercontent.com/bluenviron/mediamtx/v1.21.1/mediamtx.yml
+    # publisher -> the stream is provided by a RTSP, RTMP, WebRTC or SRT client
+    source: publisher

@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Read-only GET wrapper for MediaMTX's WebRTC (WHEP) read endpoint.
+# Usage: bin/curl-mediamtx-webrtc [path]   (default: street)
+set -euo pipefail
+path="${1:-street}"
+exec curl -sS "http://127.0.0.1:8889/${path}"

@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Read-only GET wrapper for MediaMTX's control API.
+# Usage: bin/curl-mediamtx-api [path]   (default: v3/paths/list)
+set -euo pipefail
+path="${1:-v3/paths/list}"
+exec curl -sS "http://127.0.0.1:9997/${path}"

@@ -83,6 +83,38 @@ curl 127.0.0.1:8080/stats | jq
 }
 ```
 
+## Video stream (MediaMTX + virtual camera)
+
+A virtual camera (ffmpeg, test pattern or looped file) publishes to MediaMTX
+path `street`, viewable in a browser over WebRTC.
+
+```
+sim-camera --RTSP--> MediaMTX "street" --WebRTC--> browser
+                                       --RTSP----> workers
+```
+
+```
+cp .env.example .env    # once; .env is per-machine and gitignored
+make up                 # MediaMTX + virtual camera
+make logs
+make down
+```
+
+| What | Where |
+| --- | --- |
+| Stream in a browser (WebRTC) | http://localhost:8889/street/ |
+| Stream for players and workers (RTSP) | `rtsp://localhost:8554/street` |
+| Control API | `bin/curl-mediamtx-api` |
+| Prometheus metrics | `bin/curl-mediamtx-metrics` |
+
+Every frame carries a millisecond wall-clock timestamp and a frame counter, so
+glass-to-glass latency can be read from one screenshot next to a clock.
+Settings are documented in `.env.example`.
+
+Docs: `docs/media-gateway.md` (why RTSP in, WebRTC out), `docs/ice.md`
+(WebRTC through Docker, `LAN_IP`), `docs/video-stream-design.md` (decisions),
+`docs/prod-checklist.md` (what to lock down before real use).
+
 ## Overview / Decisions
 
 - uav_gc/link.py - Owns connection. Establishes and maintains link, manages callbacks

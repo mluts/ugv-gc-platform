@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Read-only DESCRIBE wrapper for MediaMTX's RTSP listener.
+# Usage: bin/curl-mediamtx-rtsp [path]   (default: street)
+set -euo pipefail
+path="${1:-street}"
+exec curl -sS "rtsp://127.0.0.1:8554/${path}"

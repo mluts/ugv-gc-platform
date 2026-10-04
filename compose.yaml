@@ -1,0 +1,43 @@
+name: ugv-gc-platform
+
+services:
+  # NOTE: Tag is pinned because MediaMTX config keys change between versions.
+  mediamtx:
+    image: bluenviron/mediamtx:1.21.1
+    environment:
+      # Advertised to browsers as a WebRTC ICE host. Set as MTX_* because
+      # MediaMTX does not interpolate variables inside mediamtx.yml.
+      MTX_WEBRTCADDITIONALHOSTS: ${LAN_IP}
+    ports:
+      - "8554:8554"      # RTSP ingest
+      - "9997:9997"      # control API
+      - "9998:9998"      # Prometheus metrics
+      - "8889:8889"      # WebRTC read page
+      - "8189:8189/udp"  # WebRTC ICE (UDP)
+      - "8189:8189/tcp"  # WebRTC ICE (TCP fallback)
+    volumes:
+      - ./deploy/mediamtx/mediamtx.yml:/mediamtx.yml:ro
+
+  sim-camera:
+    image: linuxserver/ffmpeg:9.0-cli-ls83
+    profiles: [sim]
+    depends_on:
+      - mediamtx
+    entrypoint: ["/bin/bash", "/sim/camera.sh"]
+    restart: unless-stopped
+    environment:
+      SIM_CAMERA_SOURCE: ${SIM_CAMERA_SOURCE:-}
+      SIM_CAMERA_SIZE: ${SIM_CAMERA_SIZE:-1920x1080}
+      SIM_CAMERA_FPS: ${SIM_CAMERA_FPS:-15}
+    volumes:
+      - ./deploy/sim/camera.sh:/sim/camera.sh:ro
+      # NOTE: Host timezone, so the burned-in time matches the viewer's clock.
+      - /etc/localtime:/etc/localtime:ro
+      # NOTE: With no source configured, /dev/null stands in so the mount is always valid.
+      # create_host_path: false stops Docker from creating a missing file's path as a directory.
+      - type: bind
+        source: ${SIM_CAMERA_SOURCE:-/dev/null}
+        target: /sim/source
+        read_only: true
+        bind:
+          create_host_path: false

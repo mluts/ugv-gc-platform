@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# Read-only GET wrapper for MediaMTX's Prometheus metrics endpoint.
+set -euo pipefail
+exec curl -sS "http://127.0.0.1:9998/metrics"

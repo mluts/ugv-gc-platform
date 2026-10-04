@@ -1,4 +1,17 @@
-.PHONY: run-udp run-tcp stats sitl kill check check-tcp repl uav-sitl rm-uav-sitl ardupilotmega
+.PHONY: run-udp run-tcp stats sitl kill check check-tcp repl uav-sitl rm-uav-sitl ardupilotmega up down logs
+
+# NOTE: Every target passes the profile, otherwise `down` and `logs` ignore sim-profile services.
+COMPOSE := docker compose --profile sim
+
+# Video stack: MediaMTX + virtual camera (see docs/media-gateway.md)
+up:
+	$(COMPOSE) up -d
+
+down:
+	$(COMPOSE) down
+
+logs:
+	$(COMPOSE) logs -f
 
 run-udp: 
 	PYTHONPATH=. ./.venv/bin/python3 -m uav_gc --udp 0.0.0.0:14550
