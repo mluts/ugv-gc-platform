@@ -81,13 +81,17 @@ async def main():
 
     await c.wait_for(lambda _: uav.armable, timeout=90)
 
-    await uav.set_mode("GUIDED")
+    # Rover: hop via HOLD so the change is real (Copter checked GUIDED).
+    await uav.set_mode("HOLD")
+    await uav.set_mode("MANUAL")
     await uav.arm()
 
     await c.wait_for(lambda _: uav.armed)
 
     print(f"uav mode {uav.mav_mode}")
     print(f"uav armed {uav.armed}")
+
+    await uav.disarm()
 
     supervise.cancel()
 

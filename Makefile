@@ -1,4 +1,4 @@
-.PHONY: run-udp run-tcp stats sitl kill check check-tcp repl uav-sitl rm-uav-sitl ardupilotmega up down logs
+.PHONY: run-udp run-tcp stats sitl kill check check-tcp repl ardupilotmega up down logs build
 
 # NOTE: Every target passes the profile, otherwise `down` and `logs` ignore sim-profile services.
 COMPOSE := docker compose --profile sim
@@ -22,11 +22,14 @@ run-tcp:
 stats:
 	curl 127.0.0.1:8080/stats | jq
 
-sitl: uav-sitl
-	docker run --name uav-sitl -it --rm --add-host=host.docker.internal:host-gateway -p 127.0.0.1:5762:5762 uav-sitl
+sitl:
+	$(COMPOSE) up sitl
 
 kill:
-	docker kill uav-sitl
+	$(COMPOSE) kill sitl
+
+build:
+	$(COMPOSE) build
 
 check:
 	PYTHONPATH=. ./.venv/bin/python3 ./scripts/check_sitl.py --udp 0.0.0.0:14550
@@ -36,12 +39,6 @@ check-tcp:
 
 repl:
 	PYTHONSTARTUP="$(CURDIR)/.pythonstartup.py" ./.venv/bin/python3
-
-uav-sitl:
-	docker build -t uav-sitl sitl
-
-rm-uav-sitl:
-	docker image rm uav-sitl
 
 ardupilotmega:
 	nvim "$$(./.venv/bin/python3 -c 'import pymavlink; from pathlib import Path; print(Path(pymavlink.__file__).parent / "dialects/v20/ardupilotmega.py")')"
