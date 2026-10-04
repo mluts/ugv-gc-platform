@@ -3,6 +3,8 @@
   "permission": {
     "bash": {
       "find *": "deny",
+      "make": "allow",
+      "make *": "allow",
       "openspec list *": "allow",
       "openspec store list *": "allow",
       "openspec show *": "allow",
