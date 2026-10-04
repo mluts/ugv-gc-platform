@@ -106,7 +106,10 @@ class MavLink:
         return value
 
     def protocol_version(self):
-        return self.conn.WIRE_PROTOCOL_VERSION
+        conn = getattr(self, "conn", None)
+        if conn is None:
+            return None
+        return conn.WIRE_PROTOCOL_VERSION
 
     def _start_reader(self):
         loop = asyncio.get_running_loop()

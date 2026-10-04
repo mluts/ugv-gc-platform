@@ -31,11 +31,12 @@
 
 - [x] 2.1 Change `scripts/check_sitl.py` to switch to `HOLD`,
   then `MANUAL`, arm, and disarm before exiting; verify `make check-tcp` exits 0 against a running simulator
-- [ ] 2.2 Verify `make check` (UDP through MAVProxy) exits 0 against a running simulator, or remove `check` and `run-udp` if the `--no-mavproxy` fallback was applied in 1.2
+- [x] 2.2 Verify `make check` (UDP through MAVProxy) exits 0 against a running simulator,
+  or remove `check` and `run-udp` if the `--no-mavproxy` fallback was applied in 1.2
 
 ## 3. Bridge ready for either environment
 
-- [ ] 3.1 Make `MavLink.protocol_version()` return `None` before the first connection; verify `make run-tcp` with no simulator running answers `make stats` with a non-`UP` link instead of a 500
+- [x] 3.1 Make `MavLink.protocol_version()` return `None` before the first connection; verify `make run-tcp` with no simulator running answers `make stats` with a non-`UP` link instead of a 500
 - [ ] 3.2 Read `HTTP_HOST` and `HTTP_PORT` in `uav_gc/__main__.py` and pass them to `Api.serve`; verify `HTTP_PORT=8081 make run-tcp` serves `/stats` on 8081 and not on 8080, and that the default answers on `127.0.0.1:8080` and is refused on the LAN address
 
 ## 4. Rover behaviour and docs
