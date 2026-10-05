@@ -22,11 +22,9 @@ schema: spec-driven
 # Per-operation guidance (optional)
 # Add advisory guidance for how apply and archive work should be conducted.
 # This is separate from artifact rules above.
-# Example:
-#   operations:
-#     apply:
-#       guidance:
-#         - Keep test summaries concise
-#     archive:
-#       guidance:
-#         - Summarize the archive outcome before finishing
+operations:
+  apply:
+    guidance:
+      - "Work one task at a time. After completing a task, STOP and report: files changed, what/why, and any tests run. Wait for my explicit approval before starting the next task."
+      - "Do not mark the next task in progress until I approve the previous task."
+      - "After each task, commit the change with a message like 'feat(<area>): <task summary>' so I have a clean checkpoint to inspect or revert."
