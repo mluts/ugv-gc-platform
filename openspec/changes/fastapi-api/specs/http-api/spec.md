@@ -51,7 +51,7 @@ where `code` is one of the values below and the HTTP status is the one listed fo
 | --- | --- | --- |
 | `rejected` | 409 | the vehicle answered the command and refused it |
 | `timeout` | 504 | the vehicle did not answer, or accepted the command but never reported the change |
-| `no_link` | 503 | the vehicle link is not up, or went down while the command was waiting |
+| `no_link` | 503 | the vehicle link is not up, went down while the command was waiting, or the vehicle has not been identified yet |
 | `unknown_mode` | 422 | the requested mode is not one the vehicle has |
 | `invalid_request` | 422 | the request body is missing or malformed |
 | `internal` | 500 | an unexpected failure in the server |

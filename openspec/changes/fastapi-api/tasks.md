@@ -2,27 +2,27 @@
 
 ## 1. Dependencies and test scaffolding
 
-- [ ] 1.1 Add `fastapi` and `uvicorn`, remove `aiohttp`,
+- [x] 1.1 Add `fastapi` and `uvicorn`, remove `aiohttp`,
   and add `pytest`, `pytest-asyncio` and `httpx` as development dependencies;
   verify `uv sync` succeeds and `python -c "import fastapi, uvicorn"` runs in the venv
-- [ ] 1.2 Add pytest settings to `pyproject.toml` (`pythonpath`, `asyncio_mode = "auto"`, the `sitl` marker)
+- [x] 1.2 Add pytest settings to `pyproject.toml` (`pythonpath`, `asyncio_mode = "auto"`, the `sitl` marker)
   and create `tests/unit`, `tests/api`, `tests/sitl`;
   verify `pytest --markers` lists `sitl`
 
 ## 2. State model and typed errors
 
-- [ ] 2.1 Add the Pydantic state models to `uav_gc/models.py`
+- [x] 2.1 Add the Pydantic state models to `uav_gc/models.py`
   and `Vehicle.state(now)` returning them, replacing `api.snapshot`;
   verify with unit tests for the empty state (nulls, no batteries) and for ages computed from a given time
-- [ ] 2.2 Add `uav_gc/errors.py` and raise the typed errors from `set_mode`, `arm` and `disarm`
-  per the classification table in `design.md`, including the link check before sending;
-  verify with unit tests against a scripted link, one per table row,
-  and that nothing is sent when the link is down
-- [ ] 2.3 Add `make test-fast`; verify it passes with Docker stopped
+- [x] 2.2 Add `uav_gc/errors.py` and raise the typed errors from `set_mode`, `arm` and `disarm`
+  per the classification table in `design.md`, including the link check before sending and
+  the `is_no_response()` / `is_accepted()` split; verify with unit tests against a scripted
+  link, one per table row, and that nothing is sent when the link is down
+- [x] 2.3 Add `make test-fast`; verify it passes with Docker stopped
 
 ## 3. FastAPI application
 
-- [ ] 3.1 Rewrite `uav_gc/api.py` as `create_app(vehicle, supervise=None)`
+- [x] 3.1 Rewrite `uav_gc/api.py` as `create_app(vehicle, supervise=None)`
   with `GET /vehicle/state` and `POST /vehicle/arm`, `/vehicle/disarm`, `/vehicle/mode`,
   add `tests/fakes.py` with `FakeVehicle`;
   verify with API tests for the state shape, each command's success body, case-insensitive mode,

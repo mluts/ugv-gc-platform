@@ -69,18 +69,22 @@ which is what the `TaskGroup` does today: a bridge that can never reconnect must
 
 ### Errors are classified in the vehicle layer
 `errors.py` defines one base class carrying `code` and `message`, with a subclass per code.
-`vehicle.py` raises them at the points that today raise `RuntimeError` / `ValueError`:
+`vehicle.py` raises them from `set_mode`, `arm` and `disarm` — the commands the API exposes — covering every way a command can fail:
 
-| Situation in `vehicle.py` | Error |
+| Situation in the command path | Error |
 | --- | --- |
 | link status is not `UP` when the command starts | `no_link` |
-| `COMMAND_ACK` received and not accepted | `rejected`, message carries the `MAV_RESULT` name |
-| no `COMMAND_ACK` within the timeout | `timeout` |
-| accepted, but mode or armed state not reported in time | `timeout` |
+| link is `UP` but the mode map is not available (no vehicle type decoded yet) | `no_link` |
 | mode name not in the vehicle's mode map | `unknown_mode` |
-| `LinkDown` raised into a waiting command | `no_link` |
+| socket error while sending (`OSError`) | `no_link` |
+| no `COMMAND_ACK` within the timeout | `timeout` |
+| `COMMAND_ACK` received and not accepted | `rejected`, message carries the `MAV_RESULT` name |
+| accepted, but mode or armed state not reported in time | `timeout` |
+| `LinkDown` raised while waiting for the acknowledgement or the confirmation | `no_link` |
 
 The link check runs before anything is sent, which gives the "fails at once" behaviour.
+The acknowledgement result is split on `is_no_response()` (→ `timeout`) versus `is_accepted()`
+(→ `rejected`); today's code conflates the two into a single "refused" error.
 Timeouts stay at the current 5 seconds for the acknowledgement and 5 for the confirmation.
 
 *Alternative:* classify in the API by matching exception messages. Rejected: the strings are not a contract.
