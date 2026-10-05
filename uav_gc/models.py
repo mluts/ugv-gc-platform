@@ -75,3 +75,17 @@ class ArmedResponse(BaseModel):
 
 class ModeResponse(BaseModel):
     mode: str
+
+
+class ErrorCode(str, Enum):
+    rejected = "rejected"
+    timeout = "timeout"
+    no_link = "no_link"
+    unknown_mode = "unknown_mode"
+    invalid_request = "invalid_request"
+    internal = "internal"
+
+
+class ErrorBody(BaseModel):
+    code: ErrorCode
+    message: str

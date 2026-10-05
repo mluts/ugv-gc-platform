@@ -27,7 +27,7 @@
   add `tests/fakes.py` with `FakeVehicle`;
   verify with API tests for the state shape, each command's success body, case-insensitive mode,
   and 404 on `/stats`, `/arm`, `/disarm`, `/mode`
-- [ ] 3.2 Add the error body model and the exception handlers;
+- [x] 3.2 Add the error body model and the exception handlers;
   verify with API tests that each of `rejected`, `timeout`, `no_link`, `unknown_mode`, `invalid_request` and `internal`
   returns its status and `{code, message}`, and that `internal` leaks no traceback
 - [ ] 3.3 Declare the error responses on the command routes;
