@@ -1,9 +1,12 @@
 from dataclasses import dataclass
-from .link import MavLink
+from .link import MavLink, LinkDown
 from . import command
+from . import errors
+from . import models
 from pymavlink import mavutil
 import asyncio
 import math
+import time
 
 from pymavlink.dialects.v20.ardupilotmega import (
     MAVLink_heartbeat_message,
@@ -229,14 +232,69 @@ class Vehicle:
             & MAV.MAV_SYS_STATUS_PREARM_CHECK
         )
 
+    def state(self, now: float) -> models.VehicleState:
+        hb = self.last_heartbeat
+        position = self.position
+        attitude = self.attitude
+        return models.VehicleState(
+            position=None
+            if position is None
+            else models.Position(
+                lat=position.lat,
+                lon=position.lon,
+                alt_msl=position.alt_msl,
+                alt_rel=position.alt_rel,
+                vn=position.vn,
+                ve=position.ve,
+                vd=position.vd,
+                heading=position.heading,
+                age_s=round(now - position.at, 2),
+            ),
+            attitude=None
+            if attitude is None
+            else models.Attitude(
+                roll=attitude.roll,
+                pitch=attitude.pitch,
+                yaw=attitude.yaw,
+                age_s=round(now - attitude.at, 2),
+            ),
+            batteries=[
+                models.Battery(
+                    id=b.id,
+                    voltage=b.voltage,
+                    current=b.current,
+                    remaining_pct=b.remaining_pct,
+                    temperature=b.temperature,
+                    charge_state=b.charge_state,
+                    faults=b.faults,
+                    age_s=round(now - b.at, 2),
+                )
+                for b in self.batteries.values()
+            ],
+            mode=self.mav_mode,
+            armed=self.armed,
+            armable=self.armable,
+            position_ok=self.position_ok,
+            link=models.Link(
+                status=models.LinkStatus(self.link.status.name),
+                last_error=self.link.last_error,
+                heartbeat_age_s=None if hb is None else round(now - hb[1], 2),
+            ),
+            ts=time.time(),
+            protocol_version=self.link.protocol_version(),
+        )
+
     async def set_mode(self, name: str, timeout=5.0):
+        if self.link.status is not MavLink.LinkStatus.UP:
+            raise errors.NoLink("link is not up")
+
         mapping = self.link.conn.mode_mapping()
 
         if mapping is None:
-            raise RuntimeError("mode map unknown (no heartbeat decoded yet)")
+            raise errors.NoLink("mode map unknown (no heartbeat decoded yet)")
 
         if name not in mapping:
-            raise ValueError(f"unknown mode {name}")
+            raise errors.UnknownMode(f"unknown mode {name}")
 
         cmd = command.CmdLong(
             self.link,
@@ -245,42 +303,59 @@ class Vehicle:
             mapping[name],
         )
 
-        cmd.send()
+        try:
+            cmd.send()
+            ack = await cmd.recv_ack(timeout)
+        except (LinkDown, OSError) as e:
+            raise errors.NoLink(str(e))
 
-        ack = await cmd.recv_ack(timeout)
-
+        if ack.is_no_response():
+            raise errors.Timeout(f"mode {name}: no acknowledgement")
         if not ack.is_accepted():
-            raise RuntimeError(f"mode {name} refused: {ack.result()}")
+            raise errors.Rejected(f"mode {name} refused: {ack.result()[1].name}")
 
         if self.mav_mode == name:
             return
 
         try:
             await self.link.wait_for(lambda _: self.mav_mode == name, timeout=timeout)
+        except LinkDown as e:
+            raise errors.NoLink(str(e))
         except TimeoutError:
-            raise RuntimeError(f"mode {name} accepted, but didn't actually change")
+            raise errors.Timeout(f"mode {name} accepted, but didn't actually change")
 
     async def _arm_disarm(self, want: bool, timeout=5.0):
+        if self.link.status is not MavLink.LinkStatus.UP:
+            raise errors.NoLink("link is not up")
 
         cmd = command.CmdLong(
             self.link, MAV.MAV_CMD_COMPONENT_ARM_DISARM, 1 if want else 0
         )
 
-        cmd.send()
+        try:
+            cmd.send()
+            ack = await cmd.recv_ack(timeout)
+        except (LinkDown, OSError) as e:
+            raise errors.NoLink(str(e))
 
-        ack = await cmd.recv_ack(timeout)
-
+        if ack.is_no_response():
+            raise errors.Timeout(
+                f"{'arm' if want else 'disarm'}: no acknowledgement"
+            )
         if not ack.is_accepted():
-            raise RuntimeError(
+            raise errors.Rejected(
                 f"{'arm' if want else 'disarm'} refused: {ack.result()[1].name}"
             )
 
         if self.armed == want:
             return
+
         try:
             await self.link.wait_for(lambda _: self.armed == want, timeout)
+        except LinkDown as e:
+            raise errors.NoLink(str(e))
         except TimeoutError:
-            raise RuntimeError(
+            raise errors.Timeout(
                 f"arm={want} accepted but not confirmed within {timeout}s"
             )
 
