@@ -5,10 +5,11 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
-    "aiohttp>=3.14.3",
+    "fastapi>=0.142.2",
     "pymavlink>=2.4.49",
     "pyright>=1.1.411",
     "pyserial>=3.5",
+    "uvicorn>=0.54.0",
 ]
 
 [tool.pyright]
@@ -16,6 +17,20 @@ venvPath = "."
 venv = ".venv"
 stubPath = "typings"
 
+[tool.pytest.ini_options]
+pythonpath = ["."]
+asyncio_mode = "auto"
+markers = [
+    "sitl: requires the ArduPilot SITL simulator running",
+]
+
 [[tool.mypy.overrides]]
 module = ["pymavlink", "pymavlink.*"]
 ignore_missing_imports = true
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+    "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.0",
+]
