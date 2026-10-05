@@ -37,12 +37,12 @@
 ## 3. Bridge ready for either environment
 
 - [x] 3.1 Make `MavLink.protocol_version()` return `None` before the first connection; verify `make run-tcp` with no simulator running answers `make stats` with a non-`UP` link instead of a 500
-- [ ] 3.2 Read `HTTP_HOST` and `HTTP_PORT` in `uav_gc/__main__.py` and pass them to `Api.serve`; verify `HTTP_PORT=8081 make run-tcp` serves `/stats` on 8081 and not on 8080, and that the default answers on `127.0.0.1:8080` and is refused on the LAN address
+- [x] 3.2 Read `HTTP_HOST` and `HTTP_PORT` in `uav_gc/__main__.py` and pass them to `Api.serve`; verify `HTTP_PORT=8081 make run-tcp` serves `/stats` on 8081 and not on 8080, and that the default answers on `127.0.0.1:8080` and is refused on the LAN address
 
 ## 4. Rover behaviour and docs
 
-- [ ] 4.1 Verify start-up: after `make up` with built images, `make run-tcp` reports link `UP` on `make stats` within 60 seconds, a Rover mode, and `armable` true within 120 seconds
-- [ ] 4.2 Verify ground commands over HTTP: `POST /mode?newmode=hold`, `manual` and `guided` succeed, `newmode=land` fails with an unknown-mode error, and `POST /arm` then `/disarm` in `MANUAL` flip `armed`
-- [ ] 4.3 Verify link loss and recovery: after `make kill` the link is not `UP` within 10 seconds with a reason in `last_error`; after `make up` it is `UP` again within 60 seconds without restarting the bridge
-- [ ] 4.4 Update `README.md`: prerequisites, quickstart with `make build`, `make up` and `make run-tcp`, Rover mode examples in place of `guided` / `land`, the `/stats` sample, the link-loss demo, and the note to stop the bridge before `make check-tcp`; verify every command in the quickstart runs as written
-- [ ] 4.5 Run `openspec validate rover-compose --strict` and verify it passes
+- [x] 4.1 Verify start-up: after `make up` with built images, `make run-tcp` reports link `UP` on `make stats` within 60 seconds, a Rover mode, and `armable` true within 120 seconds
+- [x] 4.2 Verify ground commands over HTTP: `POST /mode?newmode=hold`, `manual` and `guided` succeed, `newmode=land` fails with an unknown-mode error, and `POST /arm` then `/disarm` in `MANUAL` flip `armed`
+- [x] 4.3 Verify link loss and recovery: after `make kill` the link is not `UP` within 10 seconds with a reason in `last_error`; after `make up` it is `UP` again within 60 seconds without restarting the bridge
+- [x] 4.4 Update `README.md`: prerequisites, quickstart with `make build`, `make up` and `make run-tcp`, Rover mode examples in place of `guided` / `land`, the `/stats` sample, the link-loss demo, and the note to stop the bridge before `make check-tcp`; verify every command in the quickstart runs as written
+- [x] 4.5 Run `openspec validate rover-compose --strict` and verify it passes
