@@ -2,37 +2,45 @@
 
 Ground-control platform.
 
-MAVLink telemetry bridge + vehicle cmd API.
+MAVLink telemetry bridge + vehicle command API.
 
-Tested against ArduPilot SITL in Docker.
+Tested against ArduPilot Rover SITL in Docker.
 
 ## Prerequisites
 
 - Docker
 - GNU make
-- uv (installs python 3.13)
+- uv (installs Python 3.13)
 - curl + jq
+
+The first `make build` clones and compiles ArduPilot; it takes many minutes.
 
 ## Quickstart
 
 ```
-uv sync
-make sitl # builds docker image
-
-make run-tcp # run service on 127.0.0.1:8080 using SITL SERIAL1 via TCP
-# or
-make run-udp # run service on 127.0.0.1:8080 using UDPIN on 127.0.0.1:14550
-
+uv sync          # installs Python deps into .venv
+make build       # builds the Rover SITL image (first build is slow)
+make up          # starts the simulator + video stack in the background
+make run-tcp     # runs the bridge on http://127.0.0.1:8080 against the simulator
 ```
+
+`make up` starts the ArduRover simulator, MediaMTX and the virtual camera.
+The bridge runs on the host and connects to the simulator's TCP port
+(`127.0.0.1:5762`); it reconnects on its own if the simulator restarts.
+
 ## HTTP API
 
 ```
 curl '127.0.0.1:8080/stats'
 curl -XPOST '127.0.0.1:8080/arm'
 curl -XPOST '127.0.0.1:8080/disarm'
+curl -XPOST '127.0.0.1:8080/mode?newmode=hold'
+curl -XPOST '127.0.0.1:8080/mode?newmode=manual'
 curl -XPOST '127.0.0.1:8080/mode?newmode=guided'
-curl -XPOST '127.0.0.1:8080/mode?newmode=land'
 ```
+
+Rover modes: `hold`, `manual`, `guided`, ... `land` is a Copter mode and is
+rejected with an unknown-mode error.
 
 Example
 
@@ -42,21 +50,21 @@ make stats
 curl 127.0.0.1:8080/stats | jq
 {
   "position": {
-    "lat": 0.0,
-    "lon": 0.0,
-    "alt_msl": 0.0,
-    "alt_rel": 0.0,
-    "vn": 0.0,
-    "ve": 0.0,
-    "vd": 0.06,
-    "heading": 340.2,
-    "age_s": 0.43
+    "lat": -35.3632611,
+    "lon": 149.16523,
+    "alt_msl": 583.96,
+    "alt_rel": -0.036,
+    "vn": -0.01,
+    "ve": 0.01,
+    "vd": 0.0,
+    "heading": 354.93,
+    "age_s": 0.37
   },
   "attitude": {
-    "roll": 0.00008774105663178489,
-    "pitch": -0.000018347001969232224,
-    "yaw": -0.3456156849861145,
-    "age_s": 0.03
+    "roll": 0.0011724279029294848,
+    "pitch": 0.0009718998335301876,
+    "yaw": -0.08861448615789413,
+    "age_s": 0.37
   },
   "batteries": [
     {
@@ -67,20 +75,43 @@ curl 127.0.0.1:8080/stats | jq
       "temperature": null,
       "charge_state": "MAV_BATTERY_CHARGE_STATE_OK",
       "faults": 0,
-      "age_s": 0.53
+      "age_s": 0.37
     }
   ],
-  "mode": "STABILIZE",
+  "mode": "MANUAL",
   "armed": false,
-  "armable": false,
-  "position_ok": false,
+  "armable": true,
+  "position_ok": true,
   "link": {
     "status": "UP",
     "last_error": null,
-    "heartbeat_age_s": 1
+    "heartbeat_age_s": 0.37
   },
-  "ts": 1788031878.883144
+  "ts": 1791148785.0612469,
+  "protocol_version": "2.0"
 }
+```
+
+## Link loss and recovery
+
+The bridge reconnects on its own; no restart needed.
+
+```
+make kill      # stop the simulator
+make stats     # link.status becomes "DOWN" with a reason in "last_error"
+make up        # bring the simulator back
+make stats     # link.status returns to "UP"
+```
+
+## Check script
+
+`make check-tcp` drives the simulator through `HOLD -> MANUAL -> arm -> disarm`.
+The simulator's TCP port serves one client, so stop the bridge (`Ctrl-C` in its
+terminal) before running the check:
+
+```
+make check-tcp  # via the simulator's TCP port (127.0.0.1:5762)
+make check      # via MAVProxy's UDP output (127.0.0.1:14550)
 ```
 
 ## Video stream (MediaMTX + virtual camera)
@@ -95,7 +126,7 @@ sim-camera --RTSP--> MediaMTX "street" --WebRTC--> browser
 
 ```
 cp .env.example .env    # once; .env is per-machine and gitignored
-make up                 # MediaMTX + virtual camera
+make up                 # simulator + MediaMTX + virtual camera
 make logs
 make down
 ```
