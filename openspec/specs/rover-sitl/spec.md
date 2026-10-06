@@ -44,9 +44,9 @@ The simulator SHALL run an ArduPilot Rover with steering and throttle control, a
 - **WHEN** `make down` is run
 - **THEN** the simulator and the video services are all stopped and removed
 
-#### Scenario: Check script passes against the rover
-- **WHEN** the simulator is running, no bridge is connected, and `make check-tcp` is run
-- **THEN** the script passes heartbeat, prearm, armable, mode change and arm, and exits with status 0
+#### Scenario: Simulator test suite passes against the rover
+- **WHEN** no bridge is connected to the simulator and `make test` is run
+- **THEN** the simulator tests start the simulator if it is not running, pass heartbeat, armable, mode change, arm and disarm, and the run exits with status 0
 
 ### Requirement: Bridge tolerates an absent simulator
 The bridge SHALL keep serving its state endpoint whenever the simulator is unreachable, and SHALL connect or reconnect on its own without being restarted.
