@@ -9,8 +9,9 @@ Exposes the vehicle bridge over HTTP: a typed state document, arm / disarm / mod
 ### Requirement: Vehicle state document
 `GET /vehicle/state` SHALL return the current vehicle state as one JSON document
 with the fields `position`, `attitude`, `batteries`, `mode`, `armed`, `armable`, `position_ok`,
-`link`, `ts` and `protocol_version`.
+`armable_age_s`, `link`, `ts` and `protocol_version`.
 Each telemetry group SHALL carry `age_s`, the seconds since its last message.
+`armable_age_s` SHALL be the older of the EKF and SYS_STATUS ages, or null until both are seen.
 `link` SHALL carry `status` (`CONNECTING`, `UP` or `DOWN`), `last_error` and `heartbeat_age_s`.
 The endpoint SHALL answer with status 200 whenever the server is running, whatever the state of the vehicle link.
 

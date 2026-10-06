@@ -17,6 +17,7 @@ def test_empty_state():
     assert state.mode is None
     assert state.armed is None
     assert state.armable is False
+    assert state.armable_age_s is None
     assert state.position_ok is False
     assert state.link.status == LinkStatus.DOWN
     assert state.link.last_error is None

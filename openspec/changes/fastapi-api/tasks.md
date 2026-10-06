@@ -53,7 +53,7 @@
   a Rover mode in the state, `HOLD` then `MANUAL`, arm, disarm, and `land` answering `unknown_mode`;
   delete the script and the `check` / `check-tcp` targets;
   verify the test passes
-- [ ] 4.3 Add the link-loss test, ordered last: kill the simulator, expect the link not `UP` within 10 seconds
+- [x] 4.3 Add the link-loss test, ordered last: kill the simulator, expect the link not `UP` within 10 seconds
   and `POST /vehicle/arm` answering `no_link` within 1 second, restart it, expect `UP` and `armable` again;
   verify the test passes and leaves the simulator running
 - [ ] 4.4 Add `make test` and a README testing section covering both targets

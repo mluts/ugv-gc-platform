@@ -59,6 +59,7 @@ class VehicleState(BaseModel):
     mode: str | None
     armed: bool | None
     armable: bool
+    armable_age_s: float | None
     position_ok: bool
     link: Link
     ts: float

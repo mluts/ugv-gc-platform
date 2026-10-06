@@ -31,6 +31,7 @@ class FakeVehicle:
             mode=None,
             armed=None,
             armable=False,
+            armable_age_s=None,
             position_ok=False,
             link=models.Link(
                 status=models.LinkStatus.DOWN,

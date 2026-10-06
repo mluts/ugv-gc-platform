@@ -222,20 +222,24 @@ class Vehicle:
     def position_ok(self) -> bool:
         return bool(self.ekf and self.ekf.flags & MAV.EKF_POS_HORIZ_ABS)
 
-    @property
-    def armable(self) -> bool:
-        return bool(
-            self.ekf
-            and self.ekf.flags & MAV.EKF_POS_HORIZ_ABS
-            and self.sys_status
-            and self.sys_status.onboard_control_sensors_health
-            & MAV.MAV_SYS_STATUS_PREARM_CHECK
+    def armable(self, now: float) -> tuple[bool, float | None]:
+        ekf, sys_status = self.ekf, self.sys_status
+        if ekf is None or sys_status is None:
+            return False, None
+        return (
+            bool(
+                ekf.flags & MAV.EKF_POS_HORIZ_ABS
+                and sys_status.onboard_control_sensors_health
+                & MAV.MAV_SYS_STATUS_PREARM_CHECK
+            ),
+            max(round(now - ekf.at, 2), round(now - sys_status.at, 2)),
         )
 
     def state(self, now: float) -> models.VehicleState:
         hb = self.last_heartbeat
         position = self.position
         attitude = self.attitude
+        armable, armable_age_s = self.armable(now)
         return models.VehicleState(
             position=None
             if position is None
@@ -273,7 +277,8 @@ class Vehicle:
             ],
             mode=self.mav_mode,
             armed=self.armed,
-            armable=self.armable,
+            armable=armable,
+            armable_age_s=armable_age_s,
             position_ok=self.position_ok,
             link=models.Link(
                 status=models.LinkStatus(self.link.status.name),

@@ -28,6 +28,7 @@ def test_state_shape():
             mode="HOLD",
             armed=False,
             armable=False,
+            armable_age_s=0.2,
             position_ok=False,
             link=models.Link(
                 status=models.LinkStatus.UP, last_error=None, heartbeat_age_s=1.0
@@ -47,6 +48,7 @@ def test_state_shape():
         "mode",
         "armed",
         "armable",
+        "armable_age_s",
         "position_ok",
         "link",
         "ts",
