@@ -20,7 +20,7 @@ run-tcp:
 	PYTHONPATH=. ./.venv/bin/python3 -m uav_gc --tcp 127.0.0.1:5762
 
 stats:
-	curl 127.0.0.1:8080/stats | jq
+	curl 127.0.0.1:8080/vehicle/state | jq
 
 sitl:
 	$(COMPOSE) up sitl

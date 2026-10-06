@@ -39,7 +39,7 @@
 - [x] 3.5 Switch `uav_gc/__main__.py` to `uvicorn.run` with `HTTP_HOST` / `HTTP_PORT` and delete the aiohttp code;
   verify `make run-tcp` against the simulator serves `/vehicle/state` and `/docs`,
   and that with no simulator running `POST /vehicle/arm` answers 503 `no_link` at once
-- [ ] 3.6 Point `make stats` at `/vehicle/state` and update the README API section:
+- [x] 3.6 Point `make stats` at `/vehicle/state` and update the README API section:
   the paths, the JSON body for mode, the error code table and `/docs`;
   verify every `curl` example in the README runs as written
 

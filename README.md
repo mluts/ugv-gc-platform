@@ -30,24 +30,37 @@ The bridge runs on the host and connects to the simulator's TCP port
 
 ## HTTP API
 
+Interactive documentation is at <http://127.0.0.1:8080/docs>; the raw OpenAPI
+schema is at `/openapi.json`.
+
 ```
-curl '127.0.0.1:8080/stats'
-curl -XPOST '127.0.0.1:8080/arm'
-curl -XPOST '127.0.0.1:8080/disarm'
-curl -XPOST '127.0.0.1:8080/mode?newmode=hold'
-curl -XPOST '127.0.0.1:8080/mode?newmode=manual'
-curl -XPOST '127.0.0.1:8080/mode?newmode=guided'
+curl '127.0.0.1:8080/vehicle/state'
+curl -XPOST '127.0.0.1:8080/vehicle/arm'
+curl -XPOST '127.0.0.1:8080/vehicle/disarm'
+curl -XPOST '127.0.0.1:8080/vehicle/mode' -H 'Content-Type: application/json' -d '{"mode": "hold"}'
+curl -XPOST '127.0.0.1:8080/vehicle/mode' -H 'Content-Type: application/json' -d '{"mode": "manual"}'
 ```
 
 Rover modes: `hold`, `manual`, `guided`, ... `land` is a Copter mode and is
-rejected with an unknown-mode error.
+rejected with an `unknown_mode` error.
+
+Failed requests answer `{"code": ..., "message": ...}`:
+
+| `code` | Status | Meaning |
+| --- | --- | --- |
+| `rejected` | 409 | the vehicle answered the command and refused it |
+| `timeout` | 504 | the vehicle did not answer, or accepted the command but never reported the change |
+| `no_link` | 503 | the vehicle link is not up, went down while the command was waiting, or the vehicle has not been identified yet |
+| `unknown_mode` | 422 | the requested mode is not one the vehicle has |
+| `invalid_request` | 422 | the request body is missing or malformed |
+| `internal` | 500 | an unexpected failure in the server |
 
 Example
 
 ```
 make stats
 
-curl 127.0.0.1:8080/stats | jq
+curl 127.0.0.1:8080/vehicle/state | jq
 {
   "position": {
     "lat": -35.3632611,
