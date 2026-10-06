@@ -1,3 +1,4 @@
 .nrepl-port
 __pycache__
 .env
+.obsidian/
