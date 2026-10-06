@@ -45,7 +45,7 @@
 
 ## 4. Simulator tests
 
-- [ ] 4.1 Add the session fixture in `tests/sitl/conftest.py`: start the simulator through Compose,
+- [x] 4.1 Add the session fixture in `tests/sitl/conftest.py`: start the simulator through Compose,
   run the app in-process against `127.0.0.1:5762`, wait for link `UP` and `armable`,
   and fail with a message naming a possibly connected bridge on timeout;
   verify `pytest -m sitl` reaches the first test with the simulator both stopped and already running
