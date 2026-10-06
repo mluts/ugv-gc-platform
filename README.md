@@ -116,17 +116,6 @@ make up        # bring the simulator back
 make stats     # link.status returns to "UP"
 ```
 
-## Check script
-
-`make check-tcp` drives the simulator through `HOLD -> MANUAL -> arm -> disarm`.
-The simulator's TCP port serves one client, so stop the bridge (`Ctrl-C` in its
-terminal) before running the check:
-
-```
-make check-tcp  # via the simulator's TCP port (127.0.0.1:5762)
-make check      # via MAVProxy's UDP output (127.0.0.1:14550)
-```
-
 ## Video stream (MediaMTX + virtual camera)
 
 A virtual camera (ffmpeg, test pattern or looped file) publishes to MediaMTX

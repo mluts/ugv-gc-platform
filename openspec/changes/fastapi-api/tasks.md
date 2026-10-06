@@ -49,7 +49,7 @@
   run the app in-process against `127.0.0.1:5762`, wait for link `UP` and `armable`,
   and fail with a message naming a possibly connected bridge on timeout;
   verify `pytest -m sitl` reaches the first test with the simulator both stopped and already running
-- [ ] 4.2 Port `scripts/check_sitl.py` to a simulator test over HTTP:
+- [x] 4.2 Port `scripts/check_sitl.py` to a simulator test over HTTP:
   a Rover mode in the state, `HOLD` then `MANUAL`, arm, disarm, and `land` answering `unknown_mode`;
   delete the script and the `check` / `check-tcp` targets;
   verify the test passes
