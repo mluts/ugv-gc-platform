@@ -2,12 +2,12 @@
 
 ## Purpose
 
-Ensures the codebase stays statically type-checked: one command runs the project's type checker over the source and the tests, the verification loop always includes it, and the convention is documented so new work keeps the baseline clean.
+Ensures the production code stays statically type-checked: one command runs the project's type checker over it, the verification loop always includes that command, and the convention is documented so new work keeps the baseline clean.
 
 ## ADDED Requirements
 
 ### Requirement: One command type-checks the project
-`make typecheck` SHALL run the project's static type checker across the source and the test suites and SHALL exit with status 0 when the checker reports no errors.
+`make typecheck` SHALL run the project's static type checker over the production package and SHALL exit with status 0 when the checker reports no errors.
 
 #### Scenario: Clean tree passes
 - **WHEN** the working tree contains no type errors and `make typecheck` is run
@@ -18,7 +18,7 @@ Ensures the codebase stays statically type-checked: one command runs the project
 - **THEN** the command exits non-zero and names the file and the error
 
 ### Requirement: Verification always type-checks
-`make test-fast` SHALL run the type checker as part of verification and SHALL fail when the checker reports errors, before a test run can report success.
+`make test-fast` and `make test` SHALL run the type checker as part of verification and SHALL fail when the checker reports errors, before a test run can report success.
 
 #### Scenario: Fast verification fails on a type error
 - **WHEN** a type error is present and `make test-fast` is run
@@ -28,8 +28,19 @@ Ensures the codebase stays statically type-checked: one command runs the project
 - **WHEN** the tree is clean of type errors and `make test-fast` is run
 - **THEN** the command runs the fast test suite and exits with status 0
 
+### Requirement: The type check covers production code only
+The type checker SHALL analyze the production package and SHALL exclude the test suite, so test doubles may stay duck-typed without being reshaped to satisfy the checker.
+
+#### Scenario: Test files are not analyzed
+- **WHEN** the type checker runs
+- **THEN** no diagnostic is reported for any file under `tests/`
+
+#### Scenario: A duck-typed test double is accepted
+- **WHEN** a test substitutes a hand-written fake for a production type
+- **THEN** the type checker reports no error for that substitution
+
 ### Requirement: The codebase type-checks clean
-The source and the test suites SHALL contain no type errors under the project's configured type-checking settings, and the gate SHALL be green on the checked-in tree.
+The production package SHALL contain no type errors under the project's configured type-checking settings, and the gate SHALL be green on the checked-in tree.
 
 #### Scenario: Clean baseline at introduction
 - **WHEN** the type-checking gate is introduced
