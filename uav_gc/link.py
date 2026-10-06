@@ -217,6 +217,10 @@ class MavLink:
         self._dead_reason = None
         self._session_tg = None
 
+    def close(self) -> None:
+        """Tear down the connection and drop waiters (for shutdown)."""
+        self._teardown()
+
     async def supervise(self):
         backoff = 1.0
 

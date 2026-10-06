@@ -1,11 +1,20 @@
 from uav_gc import models
 
 
+class FakeLink:
+    def __init__(self):
+        self.closed = False
+
+    def close(self):
+        self.closed = True
+
+
 class FakeVehicle:
     """A fake exposing the four methods `create_app` depends on."""
 
     def __init__(self, state=None):
         self._state = state if state is not None else self._empty_state()
+        self.link = FakeLink()
         self.armed = self._state.armed
         self.mav_mode = self._state.mode
         self.calls = []

@@ -1,5 +1,8 @@
+import asyncio
 import logging
+import signal
 import time
+from contextlib import asynccontextmanager, suppress
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
@@ -46,8 +49,38 @@ async def _internal_error_handler(request: Request, exc: Exception) -> JSONRespo
     )
 
 
+def _supervisor_done(task: asyncio.Task) -> None:
+    """Stop the server if `supervise()` dies: the link can never recover, and
+    a server that stays up would only look healthy and never be restarted."""
+    if task.cancelled():
+        return
+    exc = task.exception()
+    if exc is not None:
+        log.error("supervisor died; shutting down", exc_info=exc)
+        signal.raise_signal(signal.SIGINT)
+
+
+def _make_lifespan(vehicle, supervise):
+    @asynccontextmanager
+    async def lifespan(app):
+        task = None
+        if supervise is not None:
+            task = asyncio.create_task(supervise())
+            task.add_done_callback(_supervisor_done)
+        try:
+            yield
+        finally:
+            if task is not None:
+                task.cancel()
+                with suppress(asyncio.CancelledError, Exception):
+                    await task
+            vehicle.link.close()
+
+    return lifespan
+
+
 def create_app(vehicle, supervise=None):
-    app = FastAPI()
+    app = FastAPI(lifespan=_make_lifespan(vehicle, supervise))
 
     app.add_exception_handler(errors.CommandError, _command_error_handler)
     app.add_exception_handler(RequestValidationError, _validation_error_handler)
