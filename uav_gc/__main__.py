@@ -1,13 +1,14 @@
-import asyncio
 import logging
 import os
 
-from .api import Api
+import uvicorn
+
+from .api import create_app
 from .link import MavLink
 from .vehicle import Vehicle
 
 
-async def main():
+def main():
     logging.basicConfig(
         level=os.environ.get("LOG_LEVEL", "INFO"),
         format="%(asctime)s %(levelname)-7s %(name)s: %(message)s",
@@ -17,12 +18,10 @@ async def main():
 
     link = MavLink.from_args()
     vehicle = Vehicle(link)
-    api = Api(vehicle, link)
+    app = create_app(vehicle, link.supervise)
 
-    async with asyncio.TaskGroup() as tg:
-        tg.create_task(link.supervise())
-        tg.create_task(api.serve(host=host, port=port))
+    uvicorn.run(app, host=host, port=port)
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()

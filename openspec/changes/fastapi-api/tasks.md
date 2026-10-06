@@ -36,7 +36,7 @@
 - [x] 3.4 Add `MavLink.close()` and the lifespan that starts the supervisor, closes the link on shutdown
   and stops the server if the supervisor crashes;
   verify with API tests that the supervisor callable is started and cancelled around the client's lifetime
-- [ ] 3.5 Switch `uav_gc/__main__.py` to `uvicorn.run` with `HTTP_HOST` / `HTTP_PORT` and delete the aiohttp code;
+- [x] 3.5 Switch `uav_gc/__main__.py` to `uvicorn.run` with `HTTP_HOST` / `HTTP_PORT` and delete the aiohttp code;
   verify `make run-tcp` against the simulator serves `/vehicle/state` and `/docs`,
   and that with no simulator running `POST /vehicle/arm` answers 503 `no_link` at once
 - [ ] 3.6 Point `make stats` at `/vehicle/state` and update the README API section:
