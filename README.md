@@ -116,6 +116,17 @@ make up        # bring the simulator back
 make stats     # link.status returns to "UP"
 ```
 
+## Testing
+
+```
+make test-fast   # unit and API tests, no Docker
+make test        # everything, including the simulator tests
+```
+
+`make test` starts the Rover simulator if it is not already running and drives
+the bridge end to end over HTTP. The simulator's TCP port serves one client at a
+time, so stop a running bridge (`Ctrl-C` in its terminal) first.
+
 ## Video stream (MediaMTX + virtual camera)
 
 A virtual camera (ffmpeg, test pattern or looped file) publishes to MediaMTX

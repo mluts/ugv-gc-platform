@@ -56,7 +56,7 @@
 - [x] 4.3 Add the link-loss test, ordered last: kill the simulator, expect the link not `UP` within 10 seconds
   and `POST /vehicle/arm` answering `no_link` within 1 second, restart it, expect `UP` and `armable` again;
   verify the test passes and leaves the simulator running
-- [ ] 4.4 Add `make test` and a README testing section covering both targets
+- [x] 4.4 Add `make test` and a README testing section covering both targets
   and the need to stop a running bridge first;
   verify `make test` passes with no bridge connected
 

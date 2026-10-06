@@ -1,4 +1,4 @@
-.PHONY: run-udp run-tcp stats sitl kill test-fast repl ardupilotmega up down logs build
+.PHONY: run-udp run-tcp stats sitl kill test-fast test repl ardupilotmega up down logs build
 
 # NOTE: Every target passes the profile, otherwise `down` and `logs` ignore sim-profile services.
 COMPOSE := docker compose --profile sim
@@ -33,6 +33,9 @@ build:
 
 test-fast:
 	PYTHONPATH=. ./.venv/bin/python3 -m pytest -m "not sitl"
+
+test:
+	PYTHONPATH=. ./.venv/bin/python3 -m pytest
 
 repl:
 	PYTHONSTARTUP="$(CURDIR)/.pythonstartup.py" ./.venv/bin/python3
