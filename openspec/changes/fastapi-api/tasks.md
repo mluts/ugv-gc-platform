@@ -30,7 +30,7 @@
 - [x] 3.2 Add the error body model and the exception handlers;
   verify with API tests that each of `rejected`, `timeout`, `no_link`, `unknown_mode`, `invalid_request` and `internal`
   returns its status and `{code, message}`, and that `internal` leaks no traceback
-- [ ] 3.3 Declare the error responses on the command routes;
+- [x] 3.3 Declare the error responses on the command routes;
   verify with API tests that `/openapi.json` lists the four paths, types `link.status` and the error `code` as enumerations,
   and that `/docs` returns 200
 - [ ] 3.4 Add `MavLink.close()` and the lifespan that starts the supervisor, closes the link on shutdown

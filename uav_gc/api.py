@@ -16,6 +16,13 @@ _STATUS = {
     "unknown_mode": 422,
 }
 
+_ERROR_RESPONSES = {
+    409: {"model": models.ErrorBody},
+    422: {"model": models.ErrorBody},
+    503: {"model": models.ErrorBody},
+    504: {"model": models.ErrorBody},
+}
+
 
 async def _command_error_handler(request: Request, exc: errors.CommandError) -> JSONResponse:
     return JSONResponse(
@@ -50,17 +57,17 @@ def create_app(vehicle, supervise=None):
     def state() -> models.VehicleState:
         return vehicle.state(time.monotonic())
 
-    @app.post("/vehicle/arm")
+    @app.post("/vehicle/arm", responses=_ERROR_RESPONSES)
     async def arm() -> models.ArmedResponse:
         await vehicle.arm()
         return models.ArmedResponse(armed=vehicle.armed)
 
-    @app.post("/vehicle/disarm")
+    @app.post("/vehicle/disarm", responses=_ERROR_RESPONSES)
     async def disarm() -> models.ArmedResponse:
         await vehicle.disarm()
         return models.ArmedResponse(armed=vehicle.armed)
 
-    @app.post("/vehicle/mode")
+    @app.post("/vehicle/mode", responses=_ERROR_RESPONSES)
     async def set_mode(body: models.ModeRequest) -> models.ModeResponse:
         await vehicle.set_mode(body.mode.upper())
         return models.ModeResponse(mode=vehicle.mav_mode)
