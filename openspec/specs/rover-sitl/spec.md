@@ -2,7 +2,10 @@
 
 ## Purpose
 
-Provides the simulated ground vehicle every other capability is built and tested against: an ArduPilot Rover simulator started from the Compose stack, and a vehicle bridge that runs on the host and stays connected through the simulator starting late, stopping or restarting.
+Provides the simulated ground vehicle every other capability is built and tested against:
+an ArduPilot Rover simulator started from the Compose stack,
+and a vehicle bridge that runs on the host and stays connected through the
+simulator starting late, stopping or restarting.
 
 ## Requirements
 
@@ -68,7 +71,7 @@ The bridge SHALL listen on the loopback interface, port 8080, unless configured 
 
 #### Scenario: Default is loopback only
 - **WHEN** the bridge is started with no listen configuration
-- **THEN** `http://127.0.0.1:8080/stats` answers and port 8080 on the host's LAN address refuses connections
+- **THEN** the state endpoint answers on `127.0.0.1:8080` and port 8080 on the host's LAN address refuses connections
 
 #### Scenario: Listen address overridden
 - **WHEN** the bridge is started with a listen port of 8081 configured
