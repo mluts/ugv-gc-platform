@@ -62,5 +62,5 @@
 
 ## 5. Integration
 
-- [ ] 5.1 Verify from a clean clone: `uv sync`, `make build`, `make test` passes
-- [ ] 5.2 Run `openspec validate fastapi-api --strict` and verify it passes
+- [x] 5.1 Verify from a clean clone: `uv sync`, `make build`, `make test` passes
+- [x] 5.2 Run `openspec validate fastapi-api --strict` and verify it passes
