@@ -1,0 +1,128 @@
+# Spec Delta
+
+## MODIFIED Requirements
+
+### Requirement: Vehicle state document
+`GET /vehicle/state` SHALL return the current vehicle state as one JSON document
+with the fields `position`, `attitude`, `batteries`, `mode`, `armed`, `armable`, `position_ok`,
+`armable_age_s`, `link`, `ts` and `protocol_version`.
+Each telemetry group SHALL carry `age_s`, the seconds since its last message.
+`armable_age_s` SHALL be the older of the EKF and SYS_STATUS ages, or null until both are seen.
+`link` SHALL carry `status` (`CONNECTING`, `UP` or `DOWN`), `last_error` and `heartbeat_age_s`.
+The endpoint SHALL require a token with at least the `viewer` role,
+and with one SHALL answer with status 200 whenever the server is running, whatever the state of the vehicle link.
+
+#### Scenario: State with live telemetry
+- **WHEN** the vehicle link is `UP` and telemetry is flowing, and `GET /vehicle/state` is requested with a `viewer` token
+- **THEN** the response is 200 with `position`, `attitude` and at least one battery present, `mode` and `armed` set, and every `age_s` under 2 seconds
+
+#### Scenario: State before any telemetry
+- **WHEN** the vehicle has never been reachable and `GET /vehicle/state` is requested with a `viewer` token
+- **THEN** the response is 200 with `position`, `attitude`, `mode` and `armed` null, `batteries` empty, and `link.status` not `UP`
+
+#### Scenario: Ages grow when telemetry stops
+- **WHEN** the vehicle link goes down and `GET /vehicle/state` is requested twice with a `viewer` token, 2 seconds apart
+- **THEN** both responses keep the last known values, and every `age_s` in the second is about 2 seconds greater than in the first
+
+#### Scenario: State without a token
+- **WHEN** `GET /vehicle/state` is requested without an `Authorization` header
+- **THEN** the response is 401 with code `unauthenticated` and no state document
+
+### Requirement: Vehicle commands
+`POST /vehicle/arm`, `POST /vehicle/disarm` and `POST /vehicle/mode` SHALL require a token with at least the `operator` role,
+SHALL send the command to the vehicle
+and SHALL answer with success only after the vehicle's own reported state shows the change.
+`POST /vehicle/mode` SHALL take the mode name in a JSON body as `mode`, compared without regard to case.
+
+#### Scenario: Arm
+- **WHEN** the vehicle is armable and `POST /vehicle/arm` is requested with an `operator` token
+- **THEN** the response is 200 with `{"armed": true}`, and `GET /vehicle/state` reports `armed` as true
+
+#### Scenario: Disarm
+- **WHEN** the vehicle is armed and `POST /vehicle/disarm` is requested with an `operator` token
+- **THEN** the response is 200 with `{"armed": false}`, and `GET /vehicle/state` reports `armed` as false
+
+#### Scenario: Mode change
+- **WHEN** `POST /vehicle/mode` is requested with body `{"mode": "hold"}` and an `operator` token
+- **THEN** the response is 200 with `{"mode": "HOLD"}`, and `GET /vehicle/state` reports `mode` as `HOLD`
+
+### Requirement: Failures carry a machine-readable code
+Every failed request to a vehicle endpoint SHALL answer with a JSON body holding `code` and `message`,
+where `code` is one of the values below and the HTTP status is the one listed for it.
+
+| `code` | Status | Meaning |
+| --- | --- | --- |
+| `unauthenticated` | 401 | the token is missing, malformed, expired, forged, or its user no longer exists |
+| `forbidden` | 403 | the caller's role is below the endpoint's minimum |
+| `rejected` | 409 | the vehicle answered the command and refused it |
+| `timeout` | 504 | the vehicle did not answer, or accepted the command but never reported the change |
+| `no_link` | 503 | the vehicle link is not up, went down while the command was waiting, or the vehicle has not been identified yet |
+| `unknown_mode` | 422 | the requested mode is not one the vehicle has |
+| `invalid_request` | 422 | the request body is missing or malformed |
+| `internal` | 500 | an unexpected failure in the server |
+
+#### Scenario: No token
+- **WHEN** `POST /vehicle/arm` is requested without an `Authorization` header
+- **THEN** the response is 401 with code `unauthenticated`, a `WWW-Authenticate: Bearer` header, and nothing is sent to the vehicle
+
+#### Scenario: Wrong role
+- **WHEN** `POST /vehicle/arm` is requested with a `viewer` token
+- **THEN** the response is 403 with code `forbidden`, and nothing is sent to the vehicle
+
+#### Scenario: Vehicle refuses a command
+- **WHEN** `POST /vehicle/arm` is requested with an `operator` token and the vehicle acknowledges with a refusal
+- **THEN** the response is 409 with `code` `rejected`, and `message` names the vehicle's result
+
+#### Scenario: Vehicle does not answer
+- **WHEN** `POST /vehicle/arm` is requested with an `operator` token and the vehicle sends no acknowledgement
+- **THEN** within 10 seconds the response is 504 with `code` `timeout`
+
+#### Scenario: Change accepted but never reported
+- **WHEN** `POST /vehicle/mode` is requested with an `operator` token, the vehicle accepts it, and its reported mode does not change
+- **THEN** within 15 seconds the response is 504 with `code` `timeout`
+
+#### Scenario: Command while the link is down
+- **WHEN** the vehicle link is not `UP` and `POST /vehicle/arm`, `/vehicle/disarm` or `/vehicle/mode` is requested with an `operator` token
+- **THEN** within 1 second the response is 503 with `code` `no_link`, and nothing is sent to the vehicle
+
+#### Scenario: Link drops while a command is waiting
+- **WHEN** a command is waiting for the vehicle and the link goes down
+- **THEN** the response is 503 with `code` `no_link`
+
+#### Scenario: Unknown mode
+- **WHEN** `POST /vehicle/mode` is requested with body `{"mode": "land"}` and an `operator` token against a rover
+- **THEN** the response is 422 with `code` `unknown_mode`, `message` names the mode, and the vehicle's mode is unchanged
+
+#### Scenario: Malformed request
+- **WHEN** `POST /vehicle/mode` is requested with an `operator` token and no body or without `mode`
+- **THEN** the response is 422 with `code` `invalid_request`
+
+#### Scenario: Unexpected failure
+- **WHEN** handling a request raises an error the server does not classify
+- **THEN** the response is 500 with `code` `internal`, and the body holds no stack trace
+
+### Requirement: OpenAPI schema describes the API
+The server SHALL publish its schema at `GET /openapi.json` and interactive documentation at `GET /docs`,
+both generated from the models the endpoints use, so the schema cannot drift from the behaviour.
+The schema SHALL declare a bearer security scheme whose token URL is `POST /auth/login`,
+and every endpoint with a minimum role SHALL reference it and declare the 401 and 403 responses with the error body.
+
+#### Scenario: Schema lists every endpoint
+- **WHEN** `GET /openapi.json` is requested
+- **THEN** it lists `/vehicle/state`, `/vehicle/arm`, `/vehicle/disarm`, `/vehicle/mode`, `/auth/login`, `/auth/me`, `/users` and `/users/{id}` with their methods
+
+#### Scenario: State is fully typed
+- **WHEN** the schema of the `GET /vehicle/state` response is read
+- **THEN** every field has a declared type, nullable where it can be null, and `link.status` is an enumeration of `CONNECTING`, `UP` and `DOWN`
+
+#### Scenario: Errors are documented
+- **WHEN** the schema of a command endpoint is read
+- **THEN** it declares the 401, 403, 409, 422, 503 and 504 responses with the error body, and `code` is an enumeration of every code defined in this capability and in `auth-and-roles`
+
+#### Scenario: Security scheme is declared
+- **WHEN** the schema's security schemes are read
+- **THEN** one OAuth2 password scheme exists with token URL `/auth/login`, and `GET /vehicle/state` references it while `POST /auth/login` does not
+
+#### Scenario: Documentation page opens
+- **WHEN** `GET /docs` is requested in a browser
+- **THEN** the page loads without a token, lists the vehicle, auth and user endpoints, and offers an Authorize button
