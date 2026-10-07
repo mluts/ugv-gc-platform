@@ -19,19 +19,19 @@
 
 ## 2. Models, errors and auth primitives
 
-- [ ] 2.1 Add `Role`, `User`, `UserCreate`, `UserUpdate` and `Token` to `uav_gc/models.py`
+- [x] 2.1 Add `Role`, `User`, `UserCreate`, `UserUpdate` and `Token` to `uav_gc/models.py`
   with the six new error codes, and restructure `uav_gc/errors.py` around an `ApiError` base
   with `CommandError`, `AuthError` and `UserError` under it, one subclass per code;
   update `test_error_code_is_enum` in `tests/api/test_schema.py` to the twelve codes in declaration order;
   verify the existing unit and API tests pass and `make typecheck` passes
-- [ ] 2.2 Add `uav_gc/auth.py`: the role rank table, `hash_password(hasher, password)` / `verify_password(hasher, hash, password)`
+- [x] 2.2 Add `uav_gc/auth.py`: the role rank table, `hash_password(hasher, password)` / `verify_password(hasher, hash, password)`
   with the dummy-hash path for unknown users, and `TokenCodec(secret, ttl_s, now)` that issues and decodes tokens;
   verify with `tests/unit/test_auth.py`, using the `CHEAPEST` argon2 profile: round trip, expiry through an injected clock,
   a token signed with another secret, a tampered token, hash verify success and failure, role ordering
 
 ## 3. User store
 
-- [ ] 3.1 Add `uav_gc/users.py` with `UserStore(path)`: table creation on open, parent directory creation,
+- [x] 3.1 Add `uav_gc/users.py` with `UserStore(path)`: table creation on open, parent directory creation,
   the lock, `close`, and `count`, `list`, `get`, `get_by_username`, `create`, `update`, `delete`
   taking password hashes, never passwords, and raising `UsernameTaken` and `NotFound`;
   verify with `tests/unit/test_users.py` on `:memory:` covering each method and both errors
