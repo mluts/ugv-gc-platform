@@ -10,7 +10,7 @@ import threading
 from dataclasses import dataclass
 from pathlib import Path
 
-from .errors import NotFound, UsernameTaken
+from .errors import LastAdmin, NotFound, UsernameTaken
 from .models import Role, User
 
 _SCHEMA = (
@@ -55,7 +55,18 @@ class UserStore:
 
     def count(self) -> int:
         with self._lock:
-            row = self._conn.execute("SELECT COUNT(*) AS n FROM users").fetchone()
+            return self._count()
+
+    def _count(self) -> int:
+        # NOTE: Caller holds the lock.
+        row = self._conn.execute("SELECT COUNT(*) AS n FROM users").fetchone()
+        return int(row["n"])
+
+    def _admin_count(self) -> int:
+        # NOTE: Caller holds the lock.
+        row = self._conn.execute(
+            "SELECT COUNT(*) AS n FROM users WHERE role = ?", (Role.admin.value,)
+        ).fetchone()
         return int(row["n"])
 
     def list(self) -> list[User]:
@@ -118,6 +129,10 @@ class UserStore:
             ).fetchone()
             if row is None:
                 raise NotFound(f"user {user_id} not found")
+            current_role = Role(row["role"])
+            if role is not None and role != Role.admin and current_role == Role.admin:
+                if self._admin_count() <= 1:
+                    raise LastAdmin(f"user {user_id} is the last admin")
             if password_hash is not None:
                 self._conn.execute(
                     "UPDATE users SET password_hash = ? WHERE id = ?",
@@ -129,13 +144,31 @@ class UserStore:
                 )
             self._conn.commit()
             username = row["username"]
-            current_role = role if role is not None else Role(row["role"])
-        return User(id=user_id, username=username, role=current_role)
+            new_role = role if role is not None else current_role
+        return User(id=user_id, username=username, role=new_role)
 
     def delete(self, user_id: int) -> None:
         with self._lock:
-            cursor = self._conn.execute("DELETE FROM users WHERE id = ?", (user_id,))
+            row = self._conn.execute(
+                "SELECT role FROM users WHERE id = ?", (user_id,)
+            ).fetchone()
+            if row is None:
+                raise NotFound(f"user {user_id} not found")
+            if Role(row["role"]) == Role.admin and self._admin_count() <= 1:
+                raise LastAdmin(f"user {user_id} is the last admin")
+            self._conn.execute("DELETE FROM users WHERE id = ?", (user_id,))
             self._conn.commit()
-            deleted = cursor.rowcount
-        if deleted == 0:
-            raise NotFound(f"user {user_id} not found")
+
+    def bootstrap(self, username: str, password_hash: str) -> User | None:
+        """Create the first admin, but only while the store is empty."""
+        with self._lock:
+            if self._count() > 0:
+                return None
+            cursor = self._conn.execute(
+                "INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)",
+                (username, password_hash, Role.admin.value),
+            )
+            self._conn.commit()
+            user_id = cursor.lastrowid
+        assert user_id is not None
+        return User(id=user_id, username=username, role=Role.admin)

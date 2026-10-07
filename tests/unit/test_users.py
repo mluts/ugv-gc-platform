@@ -1,6 +1,6 @@
 import pytest
 
-from uav_gc.errors import NotFound, UsernameTaken
+from uav_gc.errors import LastAdmin, NotFound, UsernameTaken
 from uav_gc.models import Role
 from uav_gc.users import UserStore
 
@@ -101,3 +101,62 @@ def test_parent_directory_is_created(tmp_path):
         assert database.exists()
     finally:
         store.close()
+
+
+def test_deleting_the_only_admin_raises_last_admin(store):
+    admin = store.create("root", "h", Role.admin)
+
+    with pytest.raises(LastAdmin):
+        store.delete(admin.id)
+
+    assert store.count() == 1
+
+
+def test_demoting_the_only_admin_raises_last_admin(store):
+    admin = store.create("root", "h", Role.admin)
+
+    with pytest.raises(LastAdmin):
+        store.update(admin.id, role=Role.operator)
+
+    assert store.get(admin.id).role == Role.admin
+
+
+def test_password_only_update_on_the_only_admin_succeeds(store):
+    admin = store.create("root", "h", Role.admin)
+
+    updated = store.update(admin.id, password_hash="new-hash")
+
+    assert updated.role == Role.admin
+
+
+def test_one_of_two_admins_can_be_deleted(store):
+    first = store.create("a", "h", Role.admin)
+    store.create("b", "h", Role.admin)
+
+    store.delete(first.id)
+
+    assert store.count() == 1
+
+
+def test_one_of_two_admins_can_be_demoted(store):
+    first = store.create("a", "h", Role.admin)
+    store.create("b", "h", Role.admin)
+
+    updated = store.update(first.id, role=Role.operator)
+
+    assert updated.role == Role.operator
+
+
+def test_bootstrap_only_acts_on_an_empty_store(store):
+    first = store.bootstrap("root", "hash-1")
+
+    assert first is not None
+    assert first.role == Role.admin
+
+    second = store.bootstrap("other", "hash-2")
+
+    assert second is None
+    assert store.count() == 1
+    found = store.get_by_username("root")
+    assert found is not None
+    assert found.password_hash == "hash-1"
