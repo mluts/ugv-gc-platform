@@ -78,13 +78,47 @@ class ModeResponse(BaseModel):
     mode: str
 
 
+class Role(str, Enum):
+    viewer = "viewer"
+    operator = "operator"
+    admin = "admin"
+
+
+class User(BaseModel):
+    id: int
+    username: str
+    role: Role
+
+
+class UserCreate(BaseModel):
+    username: str
+    password: str
+    role: Role
+
+
+class UserUpdate(BaseModel):
+    password: str | None = None
+    role: Role | None = None
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+
+
 class ErrorCode(str, Enum):
-    rejected        = "rejected"
-    timeout         = "timeout"
-    no_link         = "no_link"
-    unknown_mode    = "unknown_mode"
-    invalid_request = "invalid_request"
-    internal        = "internal"
+    rejected            = "rejected"
+    timeout             = "timeout"
+    no_link             = "no_link"
+    unknown_mode        = "unknown_mode"
+    unauthenticated     = "unauthenticated"
+    forbidden           = "forbidden"
+    invalid_credentials = "invalid_credentials"
+    not_found           = "not_found"
+    username_taken      = "username_taken"
+    last_admin          = "last_admin"
+    invalid_request     = "invalid_request"
+    internal            = "internal"
 
 
 class ErrorBody(BaseModel):

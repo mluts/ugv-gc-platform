@@ -31,6 +31,12 @@ def test_error_code_is_enum():
         "timeout",
         "no_link",
         "unknown_mode",
+        "unauthenticated",
+        "forbidden",
+        "invalid_credentials",
+        "not_found",
+        "username_taken",
+        "last_admin",
         "invalid_request",
         "internal",
     ]
