@@ -69,4 +69,10 @@ class UsernameTaken(UserError):
 
 
 class LastAdmin(UserError):
+    """The last administrator cannot be removed or demoted.
+
+    Named for the condition, not the action, so one error covers both; its
+    code is ``last_admin``.
+    """
+
     code = ErrorCode.last_admin
