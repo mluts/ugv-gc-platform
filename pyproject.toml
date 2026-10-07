@@ -16,6 +16,7 @@ dependencies = [
 venvPath = "."
 venv = ".venv"
 stubPath = "typings"
+exclude = ["**/node_modules", "**/__pycache__", "**/.*", "tests"]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]

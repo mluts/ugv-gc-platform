@@ -1,13 +1,10 @@
 schema: spec-driven
 
-# Project context (optional)
-# This is shown to AI when creating artifacts.
-# Add your tech stack, conventions, style guides, domain knowledge, etc.
-# Example:
-#   context: |
-#     Tech stack: TypeScript, React, Node.js
-#     We use conventional commits
-#     Domain: e-commerce platform
+context: |
+  Tech stack: Python 3.13, FastAPI, pymavlink, pytest; dependencies managed with uv.
+  Type checking: pyright at its default `basic` setting, over the production package
+  `uav_gc` only — the test suite is excluded. Keep it clean: `make typecheck` must pass
+  before committing.
 
 # Per-artifact rules (optional)
 # Add custom rules for specific artifacts.
@@ -25,6 +22,6 @@ schema: spec-driven
 operations:
   apply:
     guidance:
-      - "Work one task at a time. After completing a task, STOP and report: files changed, what/why, and any tests run. Wait for my explicit approval before starting the next task."
+      - "Work one task at a time. After completing a task, STOP and report: files changed, what/why, tests run, and `make typecheck` passing. Wait for my explicit approval before starting the next task."
       - "Do not mark the next task in progress until I approve the previous task."
       - "After each task, commit the change with a message like 'feat(<area>): <task summary>' so I have a clean checkpoint to inspect or revert."

@@ -2,18 +2,18 @@
 
 ## 1. Gate and convention
 
-- [ ] 1.1 Add the `typecheck` target to the `Makefile` (also in `.PHONY`)
+- [x] 1.1 Add the `typecheck` target to the `Makefile` (also in `.PHONY`)
   running `./.venv/bin/pyright uav_gc`, and make `test-fast` and `test` depend
   on it; verify `make typecheck` runs the checker and exits non-zero on today's
   errors, and `make test-fast` fails before pytest runs
-- [ ] 1.2 Add `exclude = ["tests"]` to `[tool.pyright]` in `pyproject.toml`,
+- [x] 1.2 Add `exclude = ["tests"]` to `[tool.pyright]` in `pyproject.toml`,
   leaving the checking mode at the default `basic`;
   verify pyright reports no diagnostics for files under `tests/`
-- [ ] 1.3 Add the project-root `AGENTS.md` stating that pyright type-checks
+- [x] 1.3 Add the project-root `AGENTS.md` stating that pyright type-checks
   production code, `make typecheck` must pass before committing,
   and `make test-fast` and `make test` include it;
   verify the file states the rule
-- [ ] 1.4 Extend `openspec/config.yaml`: add a `context` block naming the stack
+- [x] 1.4 Extend `openspec/config.yaml`: add a `context` block naming the stack
   and the pyright-clean constraint, and amend the `operations.apply.guidance`
   stop-and-report bullet to include "`make typecheck` passes";
   verify `openspec list` still parses the config
