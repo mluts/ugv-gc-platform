@@ -52,7 +52,8 @@
       "uv sync --help *": "allow",
       "uv run --help *": "allow",
       ".venv/bin/pytest": "allow",
-      ".venv/bin/pytest *": "allow"
+      ".venv/bin/pytest *": "allow",
+      "mkdir -p openspec/changes/archive": "allow"
     }
   }
 }
