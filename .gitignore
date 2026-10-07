@@ -1,6 +1,5 @@
 .nrepl-port
 __pycache__
-.env
 .obsidian/
 config.toml
 data/

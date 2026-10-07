@@ -7,7 +7,7 @@ services:
     environment:
       # Advertised to browsers as a WebRTC ICE host. Set as MTX_* because
       # MediaMTX does not interpolate variables inside mediamtx.yml.
-      MTX_WEBRTCADDITIONALHOSTS: ${LAN_IP}
+      MTX_WEBRTCADDITIONALHOSTS: ${LAN_IP:-127.0.0.1}
     ports:
       - "8554:8554"      # RTSP ingest
       - "9997:9997"      # control API
