@@ -2,14 +2,16 @@
 
 ## 1. Dependencies and configuration
 
-- [ ] 1.1 Add `pyjwt`, `argon2-cffi` and `python-multipart` to `pyproject.toml`, run `uv sync` and commit `uv.lock`;
+- [x] 1.1 Add `pyjwt`, `argon2-cffi` and `python-multipart` to `pyproject.toml`, run `uv sync` and commit `uv.lock`;
   verify `python -c "import jwt, argon2, python_multipart"` runs in the venv and `make typecheck` passes
-- [ ] 1.2 Add `uav_gc/config.py`: the Pydantic `Config` with sections `http`, `link`, `log`, `auth` and `users`,
+- [x] 1.2 Add `uav_gc/config.py`: the Pydantic `Config` with sections `http`, `link`, `log`, `auth` and `users`,
   the defaults from the design, `extra="forbid"`, a non-empty `secret`, `load_config(path)` on `tomllib`
-  resolving relative paths against the file's directory, and the named example-secret constant with its warning;
+  resolving a relative `users.database` against the file's directory and rendering validation failures as
+  `path: section.key: message` without echoing the file, and the named example-secret constant with its warning;
   add `config.example.toml` with development values and comments, and `config.toml` and `data/` to `.gitignore`;
   verify with `tests/unit/test_config.py`: a valid file, the defaults, a missing file naming the path,
-  an unknown key, a wrong type, an empty secret, a relative `database` resolved next to the file,
+  a missing required section naming the section, an unknown key, a wrong type, an empty secret,
+  a relative `database` resolved next to the file, a message that does not contain the config's password,
   and the warning captured with `caplog`
 - [ ] 1.3 Default `LAN_IP` to `127.0.0.1` in `compose.yaml` and reword the `.env.example` header to say the file is optional;
   verify that with no `.env` present `make up` starts all three services and `bin/curl-mediamtx-api` answers

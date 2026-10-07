@@ -28,7 +28,7 @@ and `auth-and-roles` is the only unblocked node in `docs/roadmap.md`.
   listen address, vehicle link, log level, token secret and lifetime, user database and bootstrap admin.
   The `--tcp` / `--udp` / `--serial` flags and the `HTTP_HOST` / `HTTP_PORT` / `LOG_LEVEL` variables go away,
   and `make run` replaces `make run-tcp` and `make run-udp`.
-  A missing file, an unknown key or a wrong type stops the bridge with a message naming it.
+  A missing file, a missing required section, an unknown key or a wrong type stops the bridge with a message naming it.
 - On an empty database the bridge creates the first admin from `users.admin_username` and `users.admin_password`;
   it refuses to start with an empty database and no admin credentials,
   and warns while the shipped example secret is in use.

@@ -8,7 +8,8 @@ or from the path given by `--config`.
 It SHALL validate the file before opening the vehicle link or listening.
 On a missing file it SHALL exit non-zero with a message naming the path.
 On an unknown key, a wrong type or a missing required key it SHALL exit non-zero with a message naming the key.
-Relative paths in the file SHALL resolve against the directory of the file.
+A missing required section (`[link]`, `[auth]`) SHALL exit non-zero with a message naming the section.
+`users.database`, when it is a relative path, SHALL resolve against the directory of the file.
 `link.device` SHALL select the vehicle connection as a pymavlink device string,
 with `link.baud` applying to a serial device.
 
@@ -23,6 +24,10 @@ with `link.baud` applying to a serial device.
 #### Scenario: Wrong type
 - **WHEN** the bridge is started with a configuration file holding `[http]` `port = "eighty"`
 - **THEN** it exits non-zero and the message names `port`
+
+#### Scenario: Missing section
+- **WHEN** the bridge is started with a configuration file with no `[auth]` section
+- **THEN** it exits non-zero and the message names `auth`
 
 #### Scenario: Relative path
 - **WHEN** the bridge is started with `--config /elsewhere/config.toml` holding `users.database = "data/users.db"`

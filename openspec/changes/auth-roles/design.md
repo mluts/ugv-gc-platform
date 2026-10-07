@@ -73,9 +73,11 @@ so `cp config.example.toml config.toml` is the only setup step for the bridge.
 | `[users]` | `database`, `admin_username`, `admin_password` | `data/users.db`; the admin keys are optional |
 
 `tomllib` from the standard library parses the file.
-A Pydantic model with `extra="forbid"` validates it, so an unknown key, a wrong type, a missing `device` or an empty `secret`
-stops the bridge with Pydantic's message naming the key; a missing file stops it naming the path.
+A Pydantic model with `extra="forbid"` validates it, so an unknown key, a wrong type, a missing required
+section, a missing `device` or an empty `secret` stops the bridge with a message naming the section or key;
+a missing file stops it naming the path.
 Relative paths resolve against the directory of the configuration file, not the working directory.
+Only `users.database` is a filesystem path; `link.device` is a pymavlink device string — a serial device is absolute, under `/dev` — and is passed through unchanged.
 The shipped example secret is one named constant in `config.py`; `load_config` logs a warning when it is in use,
 and `config.example.toml` quotes the same constant in its comment, so the check and the file cannot drift.
 A container mounts the file read-only, exactly as the MediaMTX container mounts its own.
@@ -97,8 +99,10 @@ The one-token change `${LAN_IP:-127.0.0.1}` makes `make up` work on a fresh clon
 and the file becomes an override for viewing from another device or looping a camera file.
 The `rover-sitl` delta records it.
 
-### Fail fast on a bad file, a missing secret, or an empty store without credentials
+### Fail fast on a bad file, a missing section, a missing secret, or an empty store without credentials
 `__main__` loads and validates the file before opening the link or the store, and exits with the validator's message on failure.
+A missing required section (`[link]`, `[auth]`) is itself a failure: it stops the bridge naming the section, before the link or the store is opened.
+Validation failures are rendered from Pydantic's error locations as `path: section.key: message`, so the configuration — including any password in it — is never echoed back.
 When the store has no users and either admin key is missing, it exits naming `users.admin_username` and `users.admin_password`.
 Bootstrap runs only on an empty store; after that the database is the source of truth and the admin keys are ignored.
 

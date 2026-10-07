@@ -154,7 +154,8 @@ When the server starts with no users, it SHALL create one `admin`
 from `users.admin_username` and `users.admin_password` in its configuration file.
 When the server starts with no users and either key is missing,
 it SHALL exit non-zero with a message naming both keys.
-When `auth.secret` is missing or empty, it SHALL exit non-zero with a message naming it.
+When `auth.secret` is missing or empty, it SHALL exit non-zero with a message naming `auth.secret`;
+a missing `[auth]` section names `auth` instead, as any missing required section does (see `rover-sitl`).
 When `auth.secret` equals the value shipped in `config.example.toml`,
 it SHALL start and SHALL log a warning naming `auth.secret`.
 When users already exist, the server SHALL ignore `users.admin_username` and `users.admin_password`.
@@ -168,7 +169,7 @@ When users already exist, the server SHALL ignore `users.admin_username` and `us
 - **THEN** it exits non-zero and the message names `users.admin_username` and `users.admin_password`
 
 #### Scenario: Missing secret
-- **WHEN** the server starts with `auth.secret` missing or empty
+- **WHEN** the server starts with an `[auth]` section whose `secret` is missing or empty
 - **THEN** it exits non-zero and the message names `auth.secret`
 
 #### Scenario: Example secret in use
