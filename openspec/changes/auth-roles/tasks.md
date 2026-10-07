@@ -35,7 +35,7 @@
   the lock, `close`, and `count`, `list`, `get`, `get_by_username`, `create`, `update`, `delete`
   taking password hashes, never passwords, and raising `UsernameTaken` and `NotFound`;
   verify with `tests/unit/test_users.py` on `:memory:` covering each method and both errors
-- [ ] 3.2 Add the last-admin rule inside the lock for `delete` and `update`,
+- [x] 3.2 Add the last-admin rule inside the lock for `delete` and `update`,
   and `bootstrap(username, password_hash)` that acts only on an empty store;
   verify with unit tests that deleting or demoting the only admin raises `LastAdmin`,
   that a password-only update on the sole admin succeeds and leaves their role `admin`,
