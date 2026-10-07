@@ -123,6 +123,14 @@ Tests make an expired token by issuing it with a `now` set 31 minutes in the pas
 *Alternative:* carry the role in the token and skip the lookup.
 Rejected: revocation would wait up to 30 minutes; one indexed SQLite read per request costs nothing here.
 
+*Alternative:* an opaque session id in a `sessions` table, looked up per request.
+Simpler to revoke, and nothing in this deployment forbids it.
+Rejected: a signed token is valid without any storage, so the user table stays the only table,
+login writes nothing, and expiry travels inside the token instead of in a row that needs cleaning up;
+the WebSocket handshake and the nginx access check can later verify a token with nothing but the secret;
+and the per-request lookup this design keeps gives immediate revocation for a deleted or demoted user,
+which is the case a session would have covered.
+
 ### Passwords are argon2id hashes, and the hasher is an argument
 `argon2-cffi`'s `PasswordHasher` with its defaults in production: 3 passes over 64 MiB, tens of milliseconds per hash by design.
 The hasher is never a module global. `hash_password(hasher, password)` and `verify_password(hasher, hash, password)` take it,
@@ -142,6 +150,9 @@ One table: `users(id INTEGER PRIMARY KEY, username TEXT UNIQUE NOT NULL, passwor
 created with `CREATE TABLE IF NOT EXISTS` when the store opens; the parent directory is created if missing.
 The connection is opened with `check_same_thread=False` and every method takes a lock,
 because `TestClient` and FastAPI's threadpool call the store from several threads.
+`close()` closes the connection, and the application lifespan calls it at shutdown beside `vehicle.link.close()`,
+so a clean stop releases both external resources the bridge holds,
+and the test client's exit leaves no unclosed connection behind.
 The last-admin rule is checked inside the same lock as the delete or update,
 so two concurrent requests cannot both pass the count.
 `:memory:` is the path for tests.

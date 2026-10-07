@@ -19,7 +19,8 @@
 - [ ] 2.1 Add `Role`, `User`, `UserCreate`, `UserUpdate` and `Token` to `uav_gc/models.py`
   with the six new error codes, and restructure `uav_gc/errors.py` around an `ApiError` base
   with `CommandError`, `AuthError` and `UserError` under it, one subclass per code;
-  verify the existing unit and API tests still pass and `make typecheck` passes
+  update `test_error_code_is_enum` in `tests/api/test_schema.py` to the twelve codes in declaration order;
+  verify the existing unit and API tests pass and `make typecheck` passes
 - [ ] 2.2 Add `uav_gc/auth.py`: the role rank table, `hash_password(hasher, password)` / `verify_password(hasher, hash, password)`
   with the dummy-hash path for unknown users, and `TokenCodec(secret, ttl_s, now)` that issues and decodes tokens;
   verify with `tests/unit/test_auth.py`, using the `CHEAPEST` argon2 profile: round trip, expiry through an injected clock,
@@ -28,12 +29,13 @@
 ## 3. User store
 
 - [ ] 3.1 Add `uav_gc/users.py` with `UserStore(path)`: table creation on open, parent directory creation,
-  the lock, and `count`, `list`, `get`, `get_by_username`, `create`, `update`, `delete`
+  the lock, `close`, and `count`, `list`, `get`, `get_by_username`, `create`, `update`, `delete`
   taking password hashes, never passwords, and raising `UsernameTaken` and `NotFound`;
   verify with `tests/unit/test_users.py` on `:memory:` covering each method and both errors
 - [ ] 3.2 Add the last-admin rule inside the lock for `delete` and `update`,
   and `bootstrap(username, password_hash)` that acts only on an empty store;
   verify with unit tests that deleting or demoting the only admin raises `LastAdmin`,
+  that a password-only update on the sole admin succeeds and leaves their role `admin`,
   that one of two admins can be deleted,
   and that a second bootstrap with another hash leaves one user carrying the first hash
 
@@ -42,9 +44,11 @@
 - [ ] 4.1 Extend `create_app` to `(vehicle, supervise=None, *, users, auth)` with `Auth(users, codec, hasher)` as a plain holder,
   replace the command handler with one `ApiError` handler over the extended status table
   that adds `WWW-Authenticate: Bearer` on 401,
+  close the store in the lifespan beside the link,
   and add the `make_client` fixture to `tests/conftest.py`, a factory taking `vehicle`, `supervise` and `TestClient` options,
   building `Auth` with the `CHEAPEST` argon2 profile and returning a client and a token per role;
-  migrate the existing API tests to the fixture and verify they still pass with no role enforced yet
+  migrate the existing API tests to the fixture and verify they still pass with no role enforced yet,
+  and extend `tests/api/test_lifespan.py` to check the store is closed after the client exits
 - [ ] 4.2 Add `authenticate(token)`, `authorize(user, role)` and `require(role)` to `Auth`,
   reading the token through an `OAuth2PasswordBearer` instance with `auto_error=False`,
   put `viewer` on the state route and `operator` on the command routes,
@@ -56,10 +60,12 @@
   no token answers 401, `viewer` on a command answers 403 with no vehicle call, `operator` and `admin` answer neither,
   and that `make test` passes with no bridge connected
 - [ ] 4.3 Add `POST /auth/login` on `OAuth2PasswordRequestForm` returning `Token`, and `GET /auth/me`;
+  add both paths to the path set in `tests/api/test_schema.py`;
   verify with `tests/api/test_auth.py`: success, wrong password, unknown username with the same body,
   missing fields answering 422 `invalid_request`, `/auth/me` fields,
   and 401 `unauthenticated` for an expired, a forged and a deleted user's token
 - [ ] 4.4 Add `GET /users`, `POST /users` (201), `PATCH /users/{id}` and `DELETE /users/{id}` (204), all `admin`;
+  add `/users` and `/users/{id}` to the path set in `tests/api/test_schema.py`;
   verify with `tests/api/test_users.py`: create then log in, listing shows only `id`, `username`, `role`,
   duplicate 409 `username_taken`, unknown id 404 `not_found`, password change, invalid role 422,
   the two `last_admin` cases, deleting one of two admins, and a demotion taking effect on the next request;
