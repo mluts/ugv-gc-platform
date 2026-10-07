@@ -36,7 +36,7 @@
 
 ## 3. Integration
 
-- [ ] 3.1 Run `make typecheck`, `make test-fast` and `make test` on the full tree;
+- [x] 3.1 Run `make typecheck`, `make test-fast` and `make test` on the full tree;
   verify all exit 0 with no type errors and no test failures
-- [ ] 3.2 Run `openspec validate pyright-typecheck --strict`;
+- [x] 3.2 Run `openspec validate pyright-typecheck --strict`;
   verify it passes
