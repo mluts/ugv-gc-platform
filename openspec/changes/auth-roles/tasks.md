@@ -13,7 +13,7 @@
   a missing required section naming the section, an unknown key, a wrong type, an empty secret,
   a relative `database` resolved next to the file, a message that does not contain the config's password,
   and the warning captured with `caplog`
-- [ ] 1.3 Default `LAN_IP` to `127.0.0.1` in `compose.yaml`, delete `.env.example`, and drop `.env` from `.gitignore`;
+- [x] 1.3 Default `LAN_IP` to `127.0.0.1` in `compose.yaml`, delete `.env.example`, and drop `.env` from `.gitignore`;
   verify that `make up` with no `.env` and no exported variables starts all three services and `bin/curl-mediamtx-api` answers,
   and that `LAN_IP=<lan> make up` advertises the override
 
