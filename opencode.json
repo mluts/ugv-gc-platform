@@ -50,7 +50,9 @@
       "uv --version *": "allow",
       "uv --help *": "allow",
       "uv sync --help *": "allow",
-      "uv run --help *": "allow"
+      "uv run --help *": "allow",
+      ".venv/bin/pytest": "allow",
+      ".venv/bin/pytest *": "allow"
     }
   }
 }
