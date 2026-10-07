@@ -1,0 +1,34 @@
+# Development configuration for the bridge.
+#
+# Copy to `config.toml` (`cp config.example.toml config.toml`) and edit.
+# `config.toml` is per-machine and gitignored.
+
+[http]
+# Listen address. Loopback by default, so only this machine can reach the API.
+host = "127.0.0.1"
+port = 8080
+
+[link]
+# pymavlink device string: `tcp:host:port`, `udpin:host:port`, or a serial path.
+# `tcp:127.0.0.1:5762` is the Rover simulator started by `make up`.
+device = "tcp:127.0.0.1:5762"
+# Baud rate, used only with a serial device.
+baud = 115200
+
+[log]
+# Python log level: DEBUG, INFO, WARNING, ERROR.
+level = "INFO"
+
+[auth]
+# CHANGE BEFORE REAL USE. This is the development secret; the bridge logs a
+# warning while it is in use. Must equal EXAMPLE_SECRET in uav_gc/config.py.
+secret = "change-me-in-production-0123456789abcdef"
+# Token lifetime in minutes.
+token_ttl_min = 30
+
+[users]
+# SQLite file for users. Relative paths resolve against this file's directory.
+database = "data/users.db"
+# Created once, when the database has no users. Change both before real use.
+admin_username = "admin"
+admin_password = "admin"
