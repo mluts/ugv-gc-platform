@@ -5,8 +5,11 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "argon2-cffi>=25.1.0",
     "fastapi>=0.142.2",
+    "pyjwt>=2.10.1",
     "pymavlink>=2.4.49",
+    "python-multipart>=0.0.20",
     "pyright>=1.1.411",
     "pyserial>=3.5",
     "uvicorn>=0.54.0",
