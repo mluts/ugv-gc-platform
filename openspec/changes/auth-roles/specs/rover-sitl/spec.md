@@ -42,15 +42,20 @@ with `link.baud` applying to a serial device.
 ### Requirement: One command starts the simulators
 `make up` SHALL start the Rover simulator together with the existing video services, with no manual step,
 and SHALL expose the simulator's MAVLink endpoint on the host's loopback interface only.
-`.env` SHALL be optional: copied only to override the simulators' settings.
+Every simulator setting SHALL have a default in `compose.yaml`, so no configuration file or copy step is needed;
+a setting SHALL be overridable by exporting its variable for the `make up` invocation.
 
 #### Scenario: Host-run bridge connects
 - **WHEN** `make up` has been run with the images already built and `make run` is started on the host with the example configuration
 - **THEN** within 60 seconds the bridge's state endpoint reports the vehicle link as `UP`
 
-#### Scenario: Starts without `.env`
-- **WHEN** no `.env` exists and `make up` is run
+#### Scenario: Starts with no configuration
+- **WHEN** `make up` is run with no `.env` file and no exported variables
 - **THEN** the simulator, MediaMTX and the virtual camera all start, and the stream is viewable on `127.0.0.1`
+
+#### Scenario: Setting overridden
+- **WHEN** `make up` is run with `LAN_IP` exported to the host's LAN address
+- **THEN** MediaMTX advertises that address as its WebRTC ICE host
 
 #### Scenario: Vehicle becomes armable
 - **WHEN** the simulator has been up for 120 seconds at simulation speed 1 with the bridge connected

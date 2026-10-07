@@ -13,8 +13,9 @@
   a missing required section naming the section, an unknown key, a wrong type, an empty secret,
   a relative `database` resolved next to the file, a message that does not contain the config's password,
   and the warning captured with `caplog`
-- [ ] 1.3 Default `LAN_IP` to `127.0.0.1` in `compose.yaml` and reword the `.env.example` header to say the file is optional;
-  verify that with no `.env` present `make up` starts all three services and `bin/curl-mediamtx-api` answers
+- [ ] 1.3 Default `LAN_IP` to `127.0.0.1` in `compose.yaml`, delete `.env.example`, and drop `.env` from `.gitignore`;
+  verify that `make up` with no `.env` and no exported variables starts all three services and `bin/curl-mediamtx-api` answers,
+  and that `LAN_IP=<lan> make up` advertises the override
 
 ## 2. Models, errors and auth primitives
 
@@ -93,11 +94,11 @@
   and that with a wrong password it prints the login response and exits non-zero
 - [ ] 5.3 Update `README.md`: the quickstart with `cp config.example.toml config.toml` and `make run`,
   a login section, the roles table, the curl examples through `bin/curl-api`, the new rows of the error table,
-  and how to reset the user database;
+  and how to reset the user database; drop the `.env` copy step and the `.env.example` settings pointer;
   add the secret and admin password rows to `docs/prod-checklist.md`;
   verify every README example runs as written
 
 ## 6. Integration
 
-- [ ] 6.1 Verify from a clean clone with no `.env`: `uv sync`, `make build`, `cp config.example.toml config.toml`, `make test` passes;
+- [ ] 6.1 Verify from a clean clone with no `.env` or exported variables: `uv sync`, `make build`, `cp config.example.toml config.toml`, `make test` passes;
   run `openspec validate auth-roles --strict` and verify it passes

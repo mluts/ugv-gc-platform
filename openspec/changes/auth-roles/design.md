@@ -93,10 +93,12 @@ a quote, a `#` or a `$` in a password gives three different values and no error.
 *Alternative:* `pydantic-settings` with TOML plus environment overrides.
 Not needed yet; it is the upgrade path if a container setup ever needs overrides.
 
-### `.env` is optional
+### `.env` goes away; `compose.yaml` defaults every simulator setting
 `compose.yaml` already defaults every variable it reads except `LAN_IP`, whose documented default is `127.0.0.1`.
-The one-token change `${LAN_IP:-127.0.0.1}` makes `make up` work on a fresh clone with no `.env`,
-and the file becomes an override for viewing from another device or looping a camera file.
+The one-token change `${LAN_IP:-127.0.0.1}` makes `make up` work on a fresh clone with no `.env`.
+`.env.example` is deleted rather than reworded: Compose reads an exported variable with higher precedence than
+a `.env` file, so the file only ever added persistence — for viewing from another device or looping a camera file —
+and the override is just as easy on the command line (`LAN_IP=192.168.1.5 make up`).
 The `rover-sitl` delta records it.
 
 ### Fail fast on a bad file, a missing section, a missing secret, or an empty store without credentials
@@ -241,9 +243,9 @@ tests/
 - [`config.example.toml` ships a known password and secret]
   → A sim-only posture, like MediaMTX's open auth; the prod checklist lists both, and the bridge warns while the shipped secret is in use.
 - [The secret sits in a file on disk]
-  → The same exposure `.env` has today; `config.toml` is gitignored, and the prod checklist covers it.
-- [Two per-machine files, `.env` for the simulators and `config.toml` for the bridge]
-  → `.env` is optional with defaults in `compose.yaml`; only `config.toml` must be copied, and the README quickstart says so.
+  → The same exposure any per-machine file has; `config.toml` is gitignored, and the prod checklist covers it.
+- [A per-machine file for the bridge]
+  → `config.toml` is the only file to copy; the simulator stack needs none, since `compose.yaml` defaults every variable and overrides are exported for the invocation.
 - [A password change does not invalidate tokens already issued]
   → Accepted for a 30-minute lifetime; a deleted user is rejected at once because the user is looked up per request.
 - [`argon2-cffi` or `pyjwt` without usable type information under pyright]

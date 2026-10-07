@@ -32,8 +32,8 @@ and `auth-and-roles` is the only unblocked node in `docs/roadmap.md`.
 - On an empty database the bridge creates the first admin from `users.admin_username` and `users.admin_password`;
   it refuses to start with an empty database and no admin credentials,
   and warns while the shipped example secret is in use.
-- `.env` becomes optional: `compose.yaml` defaults `LAN_IP` to `127.0.0.1`, so `make up` needs no copy step.
-  The file is copied only to override the simulators' settings.
+- `.env` goes away: `compose.yaml` defaults every simulator setting (including `LAN_IP` to `127.0.0.1`),
+  so `make up` needs no copy step, and a setting is overridden by exporting its variable for the invocation.
 - The error code table grows: `unauthenticated` (401), `forbidden` (403), `invalid_credentials` (401),
   `not_found` (404), `username_taken` (409) and `last_admin` (409).
 - `/docs` gains the Authorize button, and the schema declares the security scheme
@@ -68,7 +68,7 @@ Out of scope:
   the failure table gains `unauthenticated` and `forbidden`,
   and the OpenAPI schema declares the security scheme and the 401 / 403 responses.
 - `rover-sitl`: the bridge is configured by one validated file instead of flags and environment variables,
-  `make run` replaces `make run-tcp`, and `.env` is optional for `make up`.
+  `make run` replaces `make run-tcp`, and `make up` needs no `.env` file or copy step.
 
 ## Impact
 
@@ -85,7 +85,7 @@ Out of scope:
   new unit, API and matrix tests; the simulator fixture authenticates.
 - `Makefile`: `run` replaces `run-tcp` and `run-udp`; `stats` goes through `bin/curl-api`.
 - New `config.example.toml`; `.gitignore` gains `config.toml` and `data/`.
-- `compose.yaml`: `LAN_IP` defaults to `127.0.0.1`. `.env.example`: the header says the file is optional.
+- `compose.yaml`: `LAN_IP` defaults to `127.0.0.1`. `.env.example` is deleted; simulator settings are overridden with environment variables.
 - `README.md`: quickstart with `config.toml` and `make run`, login before the curl examples,
   the roles table, the new error codes, and how to reset the user database.
 - `docs/prod-checklist.md`: change the secret and the admin password before real use.
