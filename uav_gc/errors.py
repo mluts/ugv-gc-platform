@@ -4,11 +4,13 @@ Each error carries a stable machine-readable ``code`` and a human-readable
 ``message``. The API layer maps these to HTTP responses by ``code``.
 """
 
+from .models import ErrorCode
+
 
 class CommandError(Exception):
     """Base class for command failures."""
 
-    code = "command_error"
+    code: ErrorCode
 
     def __init__(self, message: str):
         self.message = message
@@ -16,16 +18,16 @@ class CommandError(Exception):
 
 
 class Rejected(CommandError):
-    code = "rejected"
+    code = ErrorCode.rejected
 
 
 class Timeout(CommandError):
-    code = "timeout"
+    code = ErrorCode.timeout
 
 
 class NoLink(CommandError):
-    code = "no_link"
+    code = ErrorCode.no_link
 
 
 class UnknownMode(CommandError):
-    code = "unknown_mode"
+    code = ErrorCode.unknown_mode
