@@ -51,22 +51,27 @@ The gate covers `uav_gc`, so green means zero production errors. All eight are i
 
 ### D3: `ErrorCode` becomes the type of the error `code` attribute
 
-- In `errors.py`, type each class attribute with the enum: `code: ErrorCode = ErrorCode.rejected` (etc.), importing `ErrorCode` from `models.py`. `models.py` imports nothing from the package, so there is no cycle.
+- In `errors.py`, declare the base attribute as `code: ErrorCode` (annotation only) and set each subclass to an enum member (`code = ErrorCode.rejected`, etc.), importing `ErrorCode` from `models.py`. `models.py` imports nothing from the package, so there is no cycle.
+- The base's previous `code = "command_error"` value is dropped: `ErrorCode` has no `command_error` member, nothing reads the attribute, and a bare `CommandError` is never raised (`_STATUS` has no such key). The annotation is what makes `exc.code` an `ErrorCode` at base-typed call sites.
 - In `api.py`, use `models.ErrorCode.invalid_request` and `models.ErrorCode.internal` for the synthetic codes.
 
-Then `exc.code` is an `ErrorCode`, both literal sites are members, and `_STATUS` lookups keep working because `ErrorCode` subclasses `str` (same hash and equality as the plain-string keys).
+Then `exc.code` is an `ErrorCode` at the handler, both literal sites are members, and `_STATUS` lookups keep working because `ErrorCode` subclasses `str` (same hash and equality as the plain-string keys).
 
 *Alternative*: coerce at the call sites with `models.ErrorCode(exc.code)`. Rejected — it leaves the class attribute a bare `str`, so every future call site has to remember to coerce. Typing the attribute once fixes the whole chain.
 
 ### D4: `add_exception_handler` registrations use a scoped ignore
 
-Starlette types the handler parameter as a union of protocols that receive base `Exception`, so the precisely-typed handlers don't assign directly — a stub limitation, not a code problem. Add a scoped, documented ignore on the two registrations:
+Starlette types the handler parameter as a union of protocols that receive base `Exception` (`starlette/types.py:24-26`), so the precisely-typed handlers don't assign directly — a stub limitation, not a code problem. Add a scoped, documented ignore on the two registrations:
 
 ```python
-# NOTE: Starlette's ExceptionHandler union expects `Exception`; the handler is correct for this type.
-app.add_exception_handler(errors.CommandError, _command_error_handler)  # type: ignore[arg-type]
-app.add_exception_handler(RequestValidationError, _validation_error_handler)  # type: ignore[arg-type]
+# NOTE: Starlette types the handler's `exc` as the base `Exception`, so these
+# narrower handlers trip reportArgumentType (contravariant parameter).
+# See .venv/lib/python3.13/site-packages/starlette/types.py:24-26.
+app.add_exception_handler(errors.CommandError, _command_error_handler)  # pyright: ignore[reportArgumentType]
+app.add_exception_handler(RequestValidationError, _validation_error_handler)  # pyright: ignore[reportArgumentType]
 ```
+
+`# pyright: ignore[reportArgumentType]` rather than `# type: ignore[arg-type]`: pyright scopes the former to the named rule; `# type: ignore[...]` suppresses every diagnostic on the line.
 
 *Alternatives*: `cast(ExceptionHandler, ...)` (imports machinery for a checker-only concern — rejected); widening the handler parameters to `Exception` with an `isinstance` re-raise (runtime noise — rejected).
 
@@ -82,7 +87,7 @@ Annotate `_ERROR_RESPONSES: dict[int | str, dict[str, Any]]` (import `Any`), fix
 ## Risks / Trade-offs
 
 - [Excluding tests means a type error inside a test file is never caught] → Mitigation: accepted by design; tests lean on duck typing, and the production contract they exercise is checked on the production side. A scoped `# type: ignore` remains available if a test genuinely needs one.
-- [Starlette's `ExceptionHandler` type changes upstream, making the ignore stale] → Mitigation: the ignore is scoped to two lines with `arg-type`; if the signature is fixed, an unused-ignore warning surfaces it.
+- [Starlette's `ExceptionHandler` type changes upstream, making the ignore stale] → Mitigation: the ignore is scoped to two lines with `reportArgumentType`; if the signature is fixed, an unused-ignore warning surfaces it.
 - [A future pyright version reports new errors and breaks the gate] → Mitigation: the gate runs the venv-pinned version; upgrades happen deliberately through `uv` and include fixing whatever they flag.
 - [`test-fast` runs pyright on every test invocation, adding a few seconds] → Mitigation: acceptable; it is the point of the change, and `typecheck` alone remains available for quick iterations.
 

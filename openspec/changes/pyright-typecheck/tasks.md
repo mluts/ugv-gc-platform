@@ -20,18 +20,18 @@
 
 ## 2. Production diagnostics
 
-- [ ] 2.1 Type the `code` class attributes in `uav_gc/errors.py` with
+- [x] 2.1 Type the `code` class attributes in `uav_gc/errors.py` with
   `models.ErrorCode` (enum members as values), and use
   `models.ErrorCode.invalid_request` / `models.ErrorCode.internal` at the
   two literal sites in `api.py`;
   verify `./.venv/bin/pyright uav_gc` reports no `ErrorCode` argument errors
   and `pytest tests/api` passes
-- [ ] 2.2 Add a scoped, documented `# type: ignore[arg-type]` to the two
+- [x] 2.2 Add a scoped, documented `# pyright: ignore[reportArgumentType]` to the two
   `add_exception_handler` registrations in `api.py`, keeping the handlers'
   precise `exc` signatures;
   verify the two `add_exception_handler` errors are gone and
   `pytest tests/api/test_errors.py` passes
-- [ ] 2.3 Annotate `_ERROR_RESPONSES: dict[int | str, dict[str, Any]]`;
+- [x] 2.3 Annotate `_ERROR_RESPONSES: dict[int | str, dict[str, Any]]`;
   verify the three `responses=` errors are gone and `pytest tests/api/test_schema.py` passes
 
 ## 3. Integration
