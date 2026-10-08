@@ -2,6 +2,10 @@
 """Print one scalar from config.toml (or $CONFIG), addressed as section.key.
 
 Usage: bin/config [--config PATH] <section.key>
+
+Options:
+  --config PATH  configuration file to read (default: config.toml or $CONFIG)
+  -h, --help     show this help and exit
 """
 
 import os
@@ -11,6 +15,9 @@ import tomllib
 
 def main(argv: list[str]) -> int:
     path = os.environ.get("CONFIG", "config.toml")
+    if argv[:1] in (["-h"], ["--help"]):
+        print(__doc__.strip())
+        return 0
     if argv[:1] == ["--config"]:
         if len(argv) < 2:
             sys.exit("usage: bin/config [--config PATH] <section.key>")

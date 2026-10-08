@@ -8,10 +8,29 @@ set -euo pipefail
 here="$(dirname "$0")"
 config="${CONFIG:-}"
 no_auth=""
+
+usage() {
+  cat <<'EOF'
+usage: bin/curl-api [--config PATH] [--no-auth] <path> [curl options]
+
+Authenticated wrapper for the bridge's HTTP API. Reads the listen address and
+the admin credentials from config.toml (or $CONFIG), logs in, and calls the
+endpoint with the bearer token.
+
+options:
+  --config PATH  config file to read (default: config.toml or $CONFIG)
+  --no-auth      skip login and call the endpoint unauthenticated
+  -h, --help     show this help and exit
+
+<path> is the API path (e.g. /health); extra arguments are passed to curl.
+EOF
+}
+
 while :; do
   case "${1:-}" in
     --config) config="${2:?--config needs a path}"; shift 2 ;;
     --no-auth) no_auth=1; shift ;;
+    -h|--help) usage; exit 0 ;;
     *) break ;;
   esac
 done
