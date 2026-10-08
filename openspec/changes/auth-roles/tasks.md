@@ -92,7 +92,7 @@
   that a bare `curl 127.0.0.1:8080/vehicle/state` answers 401,
   that with no `config.toml` the wrapper exits non-zero naming the file,
   and that with a wrong password it prints the login response and exits non-zero
-- [ ] 5.3 Update `README.md`: the quickstart with `cp config.example.toml config.toml` and `make run`,
+- [x] 5.3 Update `README.md`: the quickstart with `cp config.example.toml config.toml` and `make run`,
   a login section, the roles table, the curl examples through `bin/curl-api`, the new rows of the error table,
   and how to reset the user database; drop the `.env` copy step and the `.env.example` settings pointer;
   add the secret and admin password rows to `docs/prod-checklist.md`;
