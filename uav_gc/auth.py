@@ -1,19 +1,25 @@
-"""Authentication primitives: password hashing, role ordering and tokens.
+"""Authentication: password hashing, tokens, and the API's auth dependency.
 
 Passwords are argon2id hashes; the hasher is an argument, never a module
 global, so the fast test suite can use a cheap profile. Tokens are JWT HS256
 whose subject is the user id; the clock is injected so tests can mint an
-expired token without sleeping.
+expired token without sleeping. `Auth.require(role)` is the FastAPI dependency
+that reads the bearer token and enforces the role.
 """
 
 import time
 from collections.abc import Callable
+from typing import Annotated
 
 import jwt
 from argon2 import PasswordHasher
 from argon2.exceptions import VerificationError
+from fastapi import Depends
+from fastapi.security import OAuth2PasswordBearer
 
-from .models import Role
+from .errors import Forbidden, NotFound, Unauthenticated
+from .models import Role, User
+from .users import UserStore
 
 # NOTE: A fixed argon2id hash (production parameters) verified when the
 # username is unknown, so a login for a missing user costs the same as one with
@@ -29,6 +35,10 @@ ROLE_RANK: dict[Role, int] = {
     Role.operator: 1,
     Role.admin: 2,
 }
+
+# Reads the `Authorization: Bearer <token>` header. `auto_error=False` lets a
+# missing header fall through to `Auth.authenticate`, so the 401 body is ours.
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login", auto_error=False)
 
 
 def hash_password(hasher: PasswordHasher, password: str) -> str:
@@ -78,3 +88,44 @@ class TokenCodec:
         """
         claims = jwt.decode(token, self.secret, algorithms=["HS256"])
         return int(claims["sub"])
+
+
+class Auth:
+    """Authentication and authorization for the API.
+
+    Holds the store, codec and hasher; `require(role)` is the FastAPI
+    dependency the routes use.
+    """
+
+    def __init__(self, users: UserStore, codec: TokenCodec, hasher: PasswordHasher):
+        self.users = users
+        self.codec = codec
+        self.hasher = hasher
+
+    def authenticate(self, token: str | None) -> User:
+        """Return the user the token belongs to, or raise `Unauthenticated`."""
+        if not token:
+            raise Unauthenticated("not authenticated")
+        try:
+            user_id = self.codec.decode(token)
+        except jwt.InvalidTokenError as exc:
+            raise Unauthenticated("invalid token") from exc
+        try:
+            return self.users.get(user_id)
+        except NotFound as exc:
+            raise Unauthenticated("user no longer exists") from exc
+
+    def authorize(self, user: User, role: Role) -> None:
+        """Raise `Forbidden` if the user's role is below `role`."""
+        if ROLE_RANK[user.role] < ROLE_RANK[role]:
+            raise Forbidden("forbidden")
+
+    def require(self, role: Role):
+        """A FastAPI dependency that authenticates the caller and enforces `role`."""
+
+        def check(token: Annotated[str | None, Depends(oauth2_scheme)]) -> User:
+            user = self.authenticate(token)
+            self.authorize(user, role)
+            return user
+
+        return check

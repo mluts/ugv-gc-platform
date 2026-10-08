@@ -1,15 +1,8 @@
-from fastapi.testclient import TestClient
-
 from tests.fakes import FakeVehicle
 from uav_gc import models
-from uav_gc.api import create_app
 
 
-def _client(vehicle=None):
-    return TestClient(create_app(vehicle or FakeVehicle()))
-
-
-def test_state_shape():
+def test_state_shape(make_client):
     vehicle = FakeVehicle(
         state=models.VehicleState(
             position=models.Position(
@@ -37,7 +30,8 @@ def test_state_shape():
             protocol_version="2.0",
         )
     )
-    response = _client(vehicle).get("/vehicle/state")
+    client, _ = make_client(vehicle)
+    response = client.get("/vehicle/state")
 
     assert response.status_code == 200
     body = response.json()
@@ -59,40 +53,44 @@ def test_state_shape():
     assert body["protocol_version"] == "2.0"
 
 
-def test_arm_success():
-    response = _client().post("/vehicle/arm")
+def test_arm_success(make_client):
+    client, _ = make_client()
+    response = client.post("/vehicle/arm")
 
     assert response.status_code == 200
     assert response.json() == {"armed": True}
 
 
-def test_disarm_success():
+def test_disarm_success(make_client):
     vehicle = FakeVehicle()
     vehicle.armed = True
-    response = _client(vehicle).post("/vehicle/disarm")
+    client, _ = make_client(vehicle)
+    response = client.post("/vehicle/disarm")
 
     assert response.status_code == 200
     assert response.json() == {"armed": False}
 
 
-def test_mode_success():
-    response = _client().post("/vehicle/mode", json={"mode": "HOLD"})
+def test_mode_success(make_client):
+    client, _ = make_client()
+    response = client.post("/vehicle/mode", json={"mode": "HOLD"})
 
     assert response.status_code == 200
     assert response.json() == {"mode": "HOLD"}
 
 
-def test_mode_case_insensitive():
+def test_mode_case_insensitive(make_client):
     vehicle = FakeVehicle()
-    response = _client(vehicle).post("/vehicle/mode", json={"mode": "hold"})
+    client, _ = make_client(vehicle)
+    response = client.post("/vehicle/mode", json={"mode": "hold"})
 
     assert response.status_code == 200
     assert response.json() == {"mode": "HOLD"}
     assert ("set_mode", "HOLD") in vehicle.calls
 
 
-def test_old_paths_return_404():
-    client = _client()
+def test_old_paths_return_404(make_client):
+    client, _ = make_client()
 
     assert client.get("/stats").status_code == 404
     assert client.post("/arm").status_code == 404
