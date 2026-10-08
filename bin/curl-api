@@ -2,18 +2,40 @@
 # Authenticated wrapper for the bridge's HTTP API.
 # Reads the listen address and the admin credentials from config.toml (or $CONFIG),
 # logs in, and calls the endpoint with the bearer token.
-# Usage: bin/curl-api <path> [curl options]
+# Usage: bin/curl-api [--config PATH] [--no-auth] <path> [curl options]
 set -euo pipefail
 
 here="$(dirname "$0")"
-path="${1:?usage: bin/curl-api <path> [curl options]}"
+config="${CONFIG:-}"
+no_auth=""
+while :; do
+  case "${1:-}" in
+    --config) config="${2:?--config needs a path}"; shift 2 ;;
+    --no-auth) no_auth=1; shift ;;
+    *) break ;;
+  esac
+done
+path="${1:?usage: bin/curl-api [--config PATH] [--no-auth] <path> [curl options]}"
 shift
 
-host="$("${here}/config" http.host)"
-port="$("${here}/config" http.port)"
-user="$("${here}/config" users.admin_username)"
-password="$("${here}/config" users.admin_password)"
+cfg_value() {
+  if [ -n "${config}" ]; then
+    "${here}/config" --config "${config}" "$1"
+  else
+    "${here}/config" "$1"
+  fi
+}
+
+host="$(cfg_value http.host)"
+port="$(cfg_value http.port)"
 base="http://${host}:${port}"
+
+if [ -n "${no_auth}" ]; then
+  exec curl -sS "${base}${path}" "$@"
+fi
+
+user="$(cfg_value users.admin_username)"
+password="$(cfg_value users.admin_password)"
 
 # Log in first; on failure print the server's answer, not a second, misleading 401.
 login="$(curl -sS --data-urlencode "username=${user}" --data-urlencode "password=${password}" "${base}/auth/login")" || exit

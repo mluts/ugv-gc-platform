@@ -1,29 +1,41 @@
-#!/usr/bin/env bash
-# Print one scalar from config.toml (or $CONFIG), addressed as section.key.
-# Usage: bin/config <section.key>
-set -euo pipefail
+#!/usr/bin/env python3
+"""Print one scalar from config.toml (or $CONFIG), addressed as section.key.
 
-config="${CONFIG:-config.toml}"
-key="${1:?usage: bin/config <section.key>}"
+Usage: bin/config [--config PATH] <section.key>
+"""
 
-exec .venv/bin/python - "$config" "$key" <<'PY'
+import os
 import sys
 import tomllib
 
-path, key = sys.argv[1], sys.argv[2]
-try:
-    with open(path, "rb") as fh:
-        value = tomllib.load(fh)
-except FileNotFoundError:
-    sys.exit(f"no configuration file: {path}")
 
-for part in key.split("."):
-    if not isinstance(value, dict) or part not in value:
-        sys.exit(f"{path}: no such key: {key}")
-    value = value[part]
+def main(argv: list[str]) -> int:
+    path = os.environ.get("CONFIG", "config.toml")
+    if argv[:1] == ["--config"]:
+        if len(argv) < 2:
+            sys.exit("usage: bin/config [--config PATH] <section.key>")
+        path, argv = argv[1], argv[2:]
+    if not argv:
+        sys.exit("usage: bin/config [--config PATH] <section.key>")
+    key = argv[0]
 
-if not isinstance(value, (str, int, float, bool)):
-    sys.exit(f"{path}: {key} is not a value")
+    try:
+        with open(path, "rb") as fh:
+            value = tomllib.load(fh)
+    except FileNotFoundError:
+        sys.exit(f"no configuration file: {path}")
 
-print(value)
-PY
+    for part in key.split("."):
+        if not isinstance(value, dict) or part not in value:
+            sys.exit(f"{path}: no such key: {key}")
+        value = value[part]
+
+    if not isinstance(value, (str, int, float, bool)):
+        sys.exit(f"{path}: {key} is not a value")
+
+    print(value)
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main(sys.argv[1:]))
