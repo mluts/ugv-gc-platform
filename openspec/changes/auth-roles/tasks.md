@@ -100,5 +100,5 @@
 
 ## 6. Integration
 
-- [ ] 6.1 Verify from a clean clone with no `.env` or exported variables: `uv sync`, `make build`, `cp config.example.toml config.toml`, `make test` passes;
+- [x] 6.1 Verify from a clean clone with no `.env` or exported variables: `uv sync`, `make build`, `cp config.example.toml config.toml`, `make test` passes;
   run `openspec validate auth-roles --strict` and verify it passes
