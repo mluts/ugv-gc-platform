@@ -1,7 +1,5 @@
 import asyncio
 
-import re
-import argparse
 import time
 from pymavlink import mavutil
 from pymavlink.dialects.v20.ardupilotmega import MAVLink_message
@@ -52,58 +50,6 @@ class MavLink:
         self._session_up_cbs: list[Callable] = []
 
         self._dead_reason = None
-
-    @classmethod
-    def from_args(cls):
-        parser = argparse.ArgumentParser()
-        transport = parser.add_mutually_exclusive_group(required=True)
-        transport.add_argument(
-            "--tcp",
-            type=cls._host_port,
-            action="store",
-            help="TCP endpoint in the form host:port",
-        )
-
-        transport.add_argument(
-            "--udp",
-            type=cls._host_port,
-            action="store",
-            help="UDP endpoint in the form host:port",
-        )
-
-        transport.add_argument(
-            "--serial",
-            action="store",
-            help="serial device path",
-        )
-        parser.add_argument(
-            "--baud",
-            type=int,
-            default=None,
-            help="serial baud rate (default: 115200)",
-        )
-
-        args = parser.parse_args()
-        if args.serial:
-            baud = args.baud if args.baud is not None else 115200
-            if baud <= 0:
-                parser.error("--baud must be a positive integer")
-            return cls(args.serial, baud=baud)
-
-        if args.baud is not None:
-            parser.error("--baud can only be used with --serial")
-
-        if args.tcp:
-            return cls(f"tcp:{args.tcp}")
-
-        return cls(f"udpin:{args.udp}")
-
-    @staticmethod
-    def _host_port(value):
-        if not re.fullmatch(r"[^:]+:\d+", value):
-            raise argparse.ArgumentTypeError("must be in the form host:port")
-
-        return value
 
     def protocol_version(self):
         conn = getattr(self, "conn", None)

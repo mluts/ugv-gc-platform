@@ -1,4 +1,4 @@
-.PHONY: run-udp run-tcp stats sitl kill typecheck test-fast test repl ardupilotmega up down logs build
+.PHONY: run stats sitl kill typecheck test-fast test repl ardupilotmega up down logs build
 
 # NOTE: Every target passes the profile, otherwise `down` and `logs` ignore sim-profile services.
 COMPOSE := docker compose --profile sim
@@ -13,14 +13,11 @@ down:
 logs:
 	$(COMPOSE) logs -f
 
-run-udp: 
-	PYTHONPATH=. ./.venv/bin/python3 -m uav_gc --udp 0.0.0.0:14550
-
-run-tcp: 
-	PYTHONPATH=. ./.venv/bin/python3 -m uav_gc --tcp 127.0.0.1:5762
+run:
+	PYTHONPATH=. ./.venv/bin/python3 -m uav_gc
 
 stats:
-	curl 127.0.0.1:8080/vehicle/state | jq
+	bin/curl-api /vehicle/state | jq
 
 sitl:
 	$(COMPOSE) up sitl

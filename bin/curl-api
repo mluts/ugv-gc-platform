@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# Authenticated wrapper for the bridge's HTTP API.
+# Reads the listen address and the admin credentials from config.toml (or $CONFIG),
+# logs in, and calls the endpoint with the bearer token.
+# Usage: bin/curl-api <path> [curl options]
+set -euo pipefail
+
+here="$(dirname "$0")"
+path="${1:?usage: bin/curl-api <path> [curl options]}"
+shift
+
+host="$("${here}/config" http.host)"
+port="$("${here}/config" http.port)"
+user="$("${here}/config" users.admin_username)"
+password="$("${here}/config" users.admin_password)"
+base="http://${host}:${port}"
+
+# Log in first; on failure print the server's answer, not a second, misleading 401.
+login="$(curl -sS --data-urlencode "username=${user}" --data-urlencode "password=${password}" "${base}/auth/login")" || exit
+token="$(jq -er .access_token <<<"${login}")" || { printf '%s\n' "${login}"; exit 1; }
+
+exec curl -sS -H "Authorization: Bearer ${token}" "${base}${path}" "$@"
