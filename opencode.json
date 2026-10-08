@@ -59,7 +59,8 @@
       ".venv/bin/pytest *": "allow",
       "mkdir -p openspec/changes/archive": "allow",
       "docker version *": "allow",
-      "docker inspect *": "allow"
+      "docker inspect *": "allow",
+      "ruff check *": "allow"
     }
   }
 }
