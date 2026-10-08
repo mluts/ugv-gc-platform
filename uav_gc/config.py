@@ -25,6 +25,9 @@ class ConfigError(Exception):
 
 
 class _Section(BaseModel):
+    """
+    Base class for config section
+    """
     model_config = ConfigDict(extra="forbid")
 
 
