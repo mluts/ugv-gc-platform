@@ -44,7 +44,7 @@
 
 ## 4. API routes and role checks
 
-- [ ] 4.1 Extend `create_app` to `(vehicle, supervise=None, *, users, auth)` with `Auth(users, codec, hasher)` as a plain holder,
+- [x] 4.1 Extend `create_app` to `(vehicle, supervise=None, *, users, auth)` with `Auth(users, codec, hasher)` as a plain holder,
   replace the command handler with one `ApiError` handler over the extended status table
   that adds `WWW-Authenticate: Bearer` on 401,
   close the store in the lifespan beside the link,
@@ -52,7 +52,7 @@
   building `Auth` with the `CHEAPEST` argon2 profile and returning a client and a token per role;
   migrate the existing API tests to the fixture and verify they still pass with no role enforced yet,
   and extend `tests/api/test_lifespan.py` to check the store is closed after the client exits
-- [ ] 4.2 Add `authenticate(token)`, `authorize(user, role)` and `require(role)` to `Auth`,
+- [x] 4.2 Add `authenticate(token)`, `authorize(user, role)` and `require(role)` to `Auth`,
   reading the token through an `OAuth2PasswordBearer` instance with `auto_error=False`,
   put `viewer` on the state route and `operator` on the command routes,
   and make the simulator fixture build the in-memory store with one admin, mint a token through the codec,
@@ -62,31 +62,31 @@
   with `tests/api/test_roles.py` for the vehicle routes:
   no token answers 401, `viewer` on a command answers 403 with no vehicle call, `operator` and `admin` answer neither,
   and that `make test` passes with no bridge connected
-- [ ] 4.3 Add `POST /auth/login` on `OAuth2PasswordRequestForm` returning `Token`, and `GET /auth/me`;
+- [x] 4.3 Add `POST /auth/login` on `OAuth2PasswordRequestForm` returning `Token`, and `GET /auth/me`;
   add both paths to the path set in `tests/api/test_schema.py`;
   verify with `tests/api/test_auth.py`: success, wrong password, unknown username with the same body,
   missing fields answering 422 `invalid_request`, `/auth/me` fields,
   and 401 `unauthenticated` for an expired, a forged and a deleted user's token
-- [ ] 4.4 Add `GET /users`, `POST /users` (201), `PATCH /users/{id}` and `DELETE /users/{id}` (204), all `admin`;
+- [x] 4.4 Add `GET /users`, `POST /users` (201), `PATCH /users/{id}` and `DELETE /users/{id}` (204), all `admin`;
   add `/users` and `/users/{id}` to the path set in `tests/api/test_schema.py`;
   verify with `tests/api/test_users.py`: create then log in, listing shows only `id`, `username`, `role`,
   duplicate 409 `username_taken`, unknown id 404 `not_found`, password change, invalid role 422,
   the two `last_admin` cases, deleting one of two admins, and a demotion taking effect on the next request;
   extend the matrix in `tests/api/test_roles.py` with the auth and user routes
-- [ ] 4.5 Declare the 401 and 403 responses on every protected route and build the app with `redoc_url=None`;
+- [x] 4.5 Declare the 401 and 403 responses on every protected route and build the app with `redoc_url=None`;
   verify with `tests/api/test_schema.py`: the eight paths, an OAuth2 password scheme with token URL `/auth/login`
   referenced by the state route and not by login, the command routes declaring 401, 403, 409, 422, 503 and 504,
   `ErrorCode` enumerating all twelve codes, `/docs` answering 200 and `/redoc` answering 404
 
 ## 5. Entry point and development loop
 
-- [ ] 5.1 Rewrite `uav_gc/__main__.py`: `--config` defaulting to `config.toml`, `load_config`, logging at `log.level`,
+- [x] 5.1 Rewrite `uav_gc/__main__.py`: `--config` defaulting to `config.toml`, `load_config`, logging at `log.level`,
   the store at `users.database`, bootstrap on an empty store or exit naming `users.admin_username` and `users.admin_password`,
   `TokenCodec` from `[auth]` and `Auth` with the default `PasswordHasher()`, `MavLink(device, baud)` from `[link]`, `create_app`, and uvicorn on `[http]`;
   delete `MavLink.from_args` and its argparse import; replace `run-tcp` and `run-udp` with `make run` in the `Makefile`;
   verify `make run` with no `config.toml` exits naming the path, with an unknown key exits naming the key,
   and with the example file starts, logs the secret warning, creates `data/users.db`, and serves `/docs`
-- [ ] 5.2 Add `bin/curl-api` and point `make stats` at it;
+- [x] 5.2 Add `bin/curl-api` and point `make stats` at it;
   verify against the running bridge that `make stats` prints the state document,
   that the wrapper's `POST /vehicle/mode` with `{"mode": "hold"}` answers `{"mode": "HOLD"}`,
   that a bare `curl 127.0.0.1:8080/vehicle/state` answers 401,

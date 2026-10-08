@@ -4,7 +4,7 @@
 
 Identifies who is calling the API and what they may do:
 a login that issues a bearer token, three ordered roles with a minimum role per endpoint,
-user management for administrators, a first administrator from the environment,
+user management for administrators, a first administrator from the configuration file,
 and error codes a client can branch on when a request is unauthenticated or forbidden.
 
 ## ADDED Requirements
