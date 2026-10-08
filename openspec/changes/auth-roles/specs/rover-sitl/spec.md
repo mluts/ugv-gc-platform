@@ -3,15 +3,11 @@
 ## ADDED Requirements
 
 ### Requirement: Bridge is configured by one file
-The bridge SHALL read its settings from `config.toml` in the working directory,
-or from the path given by `--config`.
-It SHALL validate the file before opening the vehicle link or listening.
-On a missing file it SHALL exit non-zero with a message naming the path.
-On an unknown key, a wrong type or a missing required key it SHALL exit non-zero with a message naming the key.
-A missing required section (`[link]`, `[auth]`) SHALL exit non-zero with a message naming the section.
-`users.database`, when it is a relative path, SHALL resolve against the directory of the file.
-`link.device` SHALL select the vehicle connection as a pymavlink device string,
-with `link.baud` applying to a serial device.
+The bridge SHALL read its settings from `config.toml` (or the `--config` path) and validate
+it before opening the link or listening. On a missing file, unknown key, wrong type, missing
+key, or missing required section (`[link]`, `[auth]`), it exits non-zero naming the path, key
+or section. A relative `users.database` resolves against the file's directory. `link.device`
+selects the vehicle connection as a pymavlink device string, with `link.baud` for serial.
 
 #### Scenario: Missing file
 - **WHEN** the bridge is started with no `config.toml` and no `--config`

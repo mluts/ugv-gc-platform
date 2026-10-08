@@ -34,13 +34,12 @@ and the same message, so a caller cannot learn which was wrong.
 - **THEN** the response is 422 with code `invalid_request`
 
 ### Requirement: Requests carry a bearer token
-Every endpoint except `POST /auth/login`, `GET /openapi.json`, `GET /docs` and its helper `GET /docs/oauth2-redirect`
-SHALL require an `Authorization: Bearer <token>` header.
-The server SHALL NOT serve the alternative documentation page `/redoc`.
-A missing, malformed, expired or forged token, or a token for a user that no longer exists,
-SHALL answer 401 with code `unauthenticated` and a `WWW-Authenticate: Bearer` header,
-and the request SHALL have no other effect.
-`GET /auth/me` SHALL return the caller's `id`, `username` and `role`.
+Every endpoint except `POST /auth/login`, `GET /openapi.json`, `GET /docs` and
+`GET /docs/oauth2-redirect` SHALL require an `Authorization: Bearer <token>` header.
+The server SHALL NOT serve `/redoc`. `GET /auth/me` SHALL return the caller's `id`,
+`username` and `role`. A missing, malformed, expired or forged token, or a token for a
+user that no longer exists, SHALL answer 401 with code `unauthenticated` and a
+`WWW-Authenticate: Bearer` header, with no other effect.
 
 #### Scenario: Current user
 - **WHEN** `GET /auth/me` is requested with a valid token
@@ -67,21 +66,9 @@ and the request SHALL have no other effect.
 - **THEN** the response is 404
 
 ### Requirement: Roles are ordered and checked by the server
-There SHALL be three roles, `viewer`, `operator` and `admin`,
-each including the rights of the one before.
-Every endpoint SHALL declare a minimum role as listed below,
-and a request whose token carries a lower role SHALL answer 403 with code `forbidden`
-and SHALL have no other effect.
-The role in force SHALL be the user's current role, not the one at login,
-so a role change or a deletion takes effect on the next request without waiting for the token to expire.
-
-| Method and path | Minimum role |
-| --- | --- |
-| `POST /auth/login`, `GET /openapi.json`, `GET /docs` | none |
-| `GET /auth/me` | `viewer` |
-| `GET /vehicle/state` | `viewer` |
-| `POST /vehicle/arm`, `POST /vehicle/disarm`, `POST /vehicle/mode` | `operator` |
-| `GET /users`, `POST /users`, `PATCH /users/{id}`, `DELETE /users/{id}` | `admin` |
+There SHALL be three roles — `viewer`, `operator` and `admin` — each including the rights
+of the one before. A request whose token carries a role below an endpoint's minimum SHALL
+answer 403 with code `forbidden` and SHALL have no other effect.
 
 #### Scenario: Viewer cannot command
 - **WHEN** `POST /vehicle/arm` is requested with a `viewer` token
@@ -99,15 +86,27 @@ so a role change or a deletion takes effect on the next request without waiting 
 - **WHEN** an operator holds a valid token, an admin changes that user's role to `viewer`, and the operator requests `POST /vehicle/arm` with the same token
 - **THEN** the response is 403 with code `forbidden`
 
+### Requirement: Each endpoint declares a minimum role
+Every endpoint SHALL declare the minimum role listed below.
+
+| Method and path | Minimum role |
+| --- | --- |
+| `POST /auth/login`, `GET /openapi.json`, `GET /docs` | none |
+| `GET /auth/me` | `viewer` |
+| `GET /vehicle/state` | `viewer` |
+| `POST /vehicle/arm`, `POST /vehicle/disarm`, `POST /vehicle/mode` | `operator` |
+| `GET /users`, `POST /users`, `PATCH /users/{id}`, `DELETE /users/{id}` | `admin` |
+
+#### Scenario: OpenAPI declares the roles
+- **WHEN** the OpenAPI schema is read
+- **THEN** each endpoint's minimum role matches the table above
+
 ### Requirement: Administrators manage users
-`GET /users` SHALL list every user as `id`, `username` and `role`.
-`POST /users` SHALL take `username`, `password` and `role` and SHALL answer 201 with the new user.
-`PATCH /users/{id}` SHALL take any of `password` and `role` and SHALL answer 200 with the updated user.
-`DELETE /users/{id}` SHALL answer 204.
-No response SHALL ever contain a password or a password hash.
-Usernames SHALL be unique; a duplicate SHALL answer 409 with code `username_taken`.
-An unknown `id` SHALL answer 404 with code `not_found`.
-A role outside the three defined ones SHALL answer 422 with code `invalid_request`.
+`GET /users` SHALL list every user as `id`, `username` and `role`; `POST /users` SHALL take
+`username`, `password` and `role` and answer 201; `PATCH /users/{id}` SHALL take any of
+`password` and `role` and answer 200; `DELETE /users/{id}` SHALL answer 204. No response SHALL
+contain a password or a hash. A duplicate username answers 409 `username_taken`; an unknown
+`id` answers 404 `not_found`; a role outside the three answers 422 `invalid_request`.
 
 #### Scenario: Create a user who can then log in
 - **WHEN** an admin requests `POST /users` with a new username, a password and role `operator`
@@ -150,15 +149,11 @@ SHALL answer 409 with code `last_admin` and SHALL leave the user unchanged.
 - **THEN** the response is 204
 
 ### Requirement: The first administrator comes from the configuration file
-When the server starts with no users, it SHALL create one `admin`
-from `users.admin_username` and `users.admin_password` in its configuration file.
-When the server starts with no users and either key is missing,
-it SHALL exit non-zero with a message naming both keys.
-When `auth.secret` is missing or empty, it SHALL exit non-zero with a message naming `auth.secret`;
-a missing `[auth]` section names `auth` instead, as any missing required section does (see `rover-sitl`).
-When `auth.secret` equals the value shipped in `config.example.toml`,
-it SHALL start and SHALL log a warning naming `auth.secret`.
-When users already exist, the server SHALL ignore `users.admin_username` and `users.admin_password`.
+When the server starts with no users it SHALL create one `admin` from `users.admin_username`
+and `users.admin_password`; with either key missing it SHALL exit non-zero naming both keys.
+A missing or empty `auth.secret` SHALL exit non-zero naming `auth.secret` (a missing `[auth]`
+section names `auth`). The shipped example `auth.secret` SHALL start and log a warning naming
+`auth.secret`. With users present it SHALL ignore `users.admin_username` and `users.admin_password`.
 
 #### Scenario: First start
 - **WHEN** the server starts with an empty user store and both admin keys present
