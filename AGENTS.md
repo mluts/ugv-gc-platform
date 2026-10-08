@@ -22,6 +22,11 @@ its default `basic` setting. The test suite is excluded in `pyproject.toml`
   allowlist matches `.venv/bin/*` but not `./.venv/bin/*`, so the `./` form trips
   a permission prompt. This does not apply to `make` targets, which are already
   allowlisted.
+- Reach the bridge's HTTP API only through `bin/curl-api <path>`: it reads
+  `config.toml`, logs in and attaches the token, and `make stats` goes through it.
+  Never call raw `curl` against the API — it is not allowlisted, and with auth
+  enforced it just answers 401. Use `bin/curl-api --no-auth` for the deliberately
+  unauthenticated case.
 
 ## Design: partial abstractions
 
