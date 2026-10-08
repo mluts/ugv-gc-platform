@@ -18,36 +18,98 @@ The first `make build` clones and compiles ArduPilot; it takes many minutes.
 ## Quickstart
 
 ```
-uv sync          # installs Python deps into .venv
-make build       # builds the Rover SITL image (first build is slow)
-make up          # starts the simulator + video stack in the background
-make run-tcp     # runs the bridge on http://127.0.0.1:8080 against the simulator
+uv sync                              # installs Python deps into .venv
+make build                           # builds the Rover SITL image (first build is slow)
+cp config.example.toml config.toml   # per-machine bridge config
+make up                              # starts the simulator + video stack in the background
+make run                             # runs the bridge on http://127.0.0.1:8080
 ```
 
 `make up` starts the ArduRover simulator, MediaMTX and the virtual camera.
 The bridge runs on the host and connects to the simulator's TCP port
 (`127.0.0.1:5762`); it reconnects on its own if the simulator restarts.
 
-## HTTP API
+The bridge is configured by `config.toml` (per-machine, gitignored). On an empty
+user database it creates the first admin from `[users]`. Change `[auth] secret`
+and `[users] admin_password` before real use (see `docs/prod-checklist.md`).
 
-Interactive documentation is at <http://127.0.0.1:8080/docs>; the raw OpenAPI
-schema is at `/openapi.json`.
+## Logging in
+
+The API is bearer-authenticated. `POST /auth/login` takes the OAuth2 password
+form and returns a token valid for `auth.token_ttl_min` minutes:
 
 ```
-curl '127.0.0.1:8080/vehicle/state'
-curl -XPOST '127.0.0.1:8080/vehicle/arm'
-curl -XPOST '127.0.0.1:8080/vehicle/disarm'
-curl -XPOST '127.0.0.1:8080/vehicle/mode' -H 'Content-Type: application/json' -d '{"mode": "hold"}'
-curl -XPOST '127.0.0.1:8080/vehicle/mode' -H 'Content-Type: application/json' -d '{"mode": "manual"}'
+bin/curl-api --no-auth /auth/login -XPOST \
+  --data-urlencode username=admin --data-urlencode password=admin
+# {"access_token":"<jwt>","token_type":"bearer"}
+```
+
+`bin/curl-api` logs in with the `[users]` credentials from `config.toml` on
+every call and attaches the token, so the examples below need no manual step.
+`bin/curl-api --no-auth <path>` sends a request without a token.
+
+## HTTP API
+
+Interactive documentation is at <http://127.0.0.1:8080/docs> (with an Authorize
+button); the raw OpenAPI schema is at `/openapi.json`.
+
+```
+bin/curl-api /vehicle/state
+bin/curl-api /vehicle/arm -XPOST
+bin/curl-api /vehicle/disarm -XPOST
+bin/curl-api /vehicle/mode -XPOST -H 'Content-Type: application/json' -d '{"mode": "hold"}'
+bin/curl-api /vehicle/mode -XPOST -H 'Content-Type: application/json' -d '{"mode": "manual"}'
+bin/curl-api /auth/me
 ```
 
 Rover modes: `hold`, `manual`, `guided`, ... `land` is a Copter mode and is
 rejected with an `unknown_mode` error.
 
+### Roles
+
+Three roles, each including the rights of the one before it:
+
+| Method and path | Minimum role |
+| --- | --- |
+| `POST /auth/login`, `GET /openapi.json`, `GET /docs` | none |
+| `GET /auth/me` | `viewer` |
+| `GET /vehicle/state` | `viewer` |
+| `POST /vehicle/arm`, `POST /vehicle/disarm`, `POST /vehicle/mode` | `operator` |
+| `GET /users`, `POST /users`, `PATCH /users/{id}`, `DELETE /users/{id}` | `admin` |
+
+A request without a valid token answers 401 `unauthenticated`; one with a role
+below the endpoint's minimum answers 403 `forbidden`.
+
+### Users (admin)
+
+```
+bin/curl-api /users
+bin/curl-api /users -XPOST -H 'Content-Type: application/json' \
+  -d '{"username": "bob", "password": "secret", "role": "operator"}'
+bin/curl-api /users/2 -XPATCH -H 'Content-Type: application/json' -d '{"role": "viewer"}'
+bin/curl-api /users/2 -XDELETE
+```
+
+`GET /users` lists `id`, `username` and `role`; `POST /users` answers 201;
+`PATCH /users/{id}` changes `password` and/or `role`; `DELETE /users/{id}`
+answers 204. The last remaining admin cannot be deleted or demoted (`last_admin`).
+No response ever contains a password or a password hash.
+
+To start over with a fresh admin, stop the bridge and delete `data/users.db`;
+the next start recreates it from `[users]`.
+
+### Errors
+
 Failed requests answer `{"code": ..., "message": ...}`:
 
 | `code` | Status | Meaning |
 | --- | --- | --- |
+| `unauthenticated` | 401 | the token is missing, malformed, expired, forged, or its user no longer exists |
+| `forbidden` | 403 | the caller's role is below the endpoint's minimum |
+| `invalid_credentials` | 401 | the login username or password is wrong |
+| `not_found` | 404 | the requested user does not exist |
+| `username_taken` | 409 | the username is already in use |
+| `last_admin` | 409 | the last administrator cannot be removed or demoted |
 | `rejected` | 409 | the vehicle answered the command and refused it |
 | `timeout` | 504 | the vehicle did not answer, or accepted the command but never reported the change |
 | `no_link` | 503 | the vehicle link is not up, went down while the command was waiting, or the vehicle has not been identified yet |
@@ -59,8 +121,6 @@ Example
 
 ```
 make stats
-
-curl 127.0.0.1:8080/vehicle/state | jq
 {
   "position": {
     "lat": -35.3632611,
@@ -138,7 +198,6 @@ sim-camera --RTSP--> MediaMTX "street" --WebRTC--> browser
 ```
 
 ```
-cp .env.example .env    # once; .env is per-machine and gitignored
 make up                 # simulator + MediaMTX + virtual camera
 make logs
 make down
@@ -153,7 +212,8 @@ make down
 
 Every frame carries a millisecond wall-clock timestamp and a frame counter, so
 glass-to-glass latency can be read from one screenshot next to a clock.
-Settings are documented in `.env.example`.
+Simulator settings have defaults in `compose.yaml`; override one by exporting
+its variable for `make up` (for example `LAN_IP=192.168.1.5 make up`).
 
 Docs: `docs/media-gateway.md` (why RTSP in, WebRTC out), `docs/ice.md`
 (WebRTC through Docker, `LAN_IP`), `docs/video-stream-design.md` (decisions),
