@@ -30,14 +30,6 @@
       "route -n get *": "allow",
       "route get *": "allow",
       "networksetup -listallhardwareports": "allow",
-      "docker exec archie-mediamtx-1 cat *": "allow",
-      "docker exec archie-mediamtx-1 env": "allow",
-      "docker exec archie-mediamtx-1 ffprobe *": "allow",
-      "docker exec archie-mediamtx-1 curl *": "allow",
-      "docker exec archie-sim-camera-1 cat *": "allow",
-      "docker exec archie-sim-camera-1 env": "allow",
-      "docker exec archie-sim-camera-1 ffprobe *": "allow",
-      "docker exec archie-sim-camera-1 curl *": "allow",
       "bin/curl-mediamtx-api": "allow",
       "bin/curl-mediamtx-api *": "allow",
       "bin/curl-mediamtx-metrics": "allow",
@@ -53,14 +45,14 @@
       "git -C *": "deny",
       "uv --version *": "allow",
       "uv --help *": "allow",
-      "uv sync --help *": "allow",
       "uv run --help *": "allow",
       ".venv/bin/pytest": "allow",
       ".venv/bin/pytest *": "allow",
       "mkdir -p openspec/changes/archive": "allow",
       "docker version *": "allow",
       "docker inspect *": "allow",
-      "ruff check *": "allow"
+      "ruff check *": "allow",
+      "uv sync *": "allow"
     }
   }
 }
