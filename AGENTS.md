@@ -16,11 +16,7 @@ Project-specific instructions for agents working in this repository.
 
 - Invoke venv executables as `.venv/bin/<tool>` with no `./` prefix — e.g.
   `.venv/bin/pyright uav_gc` and `.venv/bin/pytest -m "not sitl"`.
-- Reach the bridge's HTTP API only through `bin/curl-api <path>`: it reads
-  `config.toml`, logs in and attaches the token, and `make stats` goes through it.
-  Never call raw `curl` against the API — it is not allowlisted, and with auth
-  enforced it just answers 401. Use `bin/curl-api --no-auth` for the deliberately
-  unauthenticated case.
+- Reach the bridge's HTTP API only through `bin/curl-api <path>` (see `bin/curl-api --help`)
 
 ## Design: partial abstractions
 
